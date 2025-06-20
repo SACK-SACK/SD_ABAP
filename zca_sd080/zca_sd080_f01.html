@@ -1,0 +1,2182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD080_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD080_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD080_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD080_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0110 .
+  CREATE OBJECT go_container_0110
+    EXPORTING
+      container_name = 'CCON_TAB1'                " Name of the Screen CustCtrl Name to Link Container To
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*     cntl_error     = 1                " CNTL_ERROR</font>
+<font color ="#0000FF">*     cntl_system_error           = 2                " CNTL_SYSTEM_ERROR</font>
+<font color ="#0000FF">*     create_error   = 3                " CREATE_ERROR</font>
+<font color ="#0000FF">*     lifetime_error = 4                " LIFETIME_ERROR</font>
+<font color ="#0000FF">*     lifetime_dynpro_dynpro_link = 5                " LIFETIME_DYNPRO_DYNPRO_LINK</font>
+<font color ="#0000FF">*     others         = 6</font>
+    .
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*     WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+  ENDIF.
+
+  CREATE OBJECT go_alv_0110
+    EXPORTING
+      i_parent = go_container_0110               " Parent Container
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*     error_cntl_create       = 1                " Error when creating the control</font>
+<font color ="#0000FF">*     error_cntl_init         = 2                " Error While Initializing Control</font>
+<font color ="#0000FF">*     error_cntl_link         = 3                " Error While Linking Control</font>
+<font color ="#0000FF">*     error_dp_create         = 4                " Error While Creating DataProvider Control</font>
+<font color ="#0000FF">*     others   = 5</font>
+    .
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*     WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_DISPLAY_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_display_0110 .
+
+  DATA  ls_variant_0110 TYPE disvariant.
+  ls_variant_0110-report = sy-repid.
+  ls_variant_0110-handle = '0110'.
+
+  go_alv_0110-&gt;set_table_for_first_display(
+    EXPORTING
+<font color ="#0000FF">*      i_structure_name              =  'ZCA_SDT080'                " Internal Output Table Structure Name</font>
+      is_variant                    =  ls_variant_0110                " Layout
+      i_save                        =   'A'               " Save Layout
+<font color ="#0000FF">*      i_default                     = 'X'              " Default Display Variant</font>
+      is_layout                     =  gs_layout_0110                " Layout
+    CHANGING
+      it_outtab                     =  gt_sale                " Output Table
+      it_fieldcatalog               =  gt_field_cat_0110               " Field Catalog
+<font color ="#0000FF">*      it_sort                       =                  " Sort Criteria</font>
+<font color ="#0000FF">*      it_filter                     =                  " Filter Criteria</font>
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*      invalid_parameter_combination = 1                " Wrong Parameter</font>
+<font color ="#0000FF">*      program_error                 = 2                " Program Errors</font>
+<font color ="#0000FF">*      too_many_lines                = 3                " Too many Rows in Ready for Input Grid</font>
+<font color ="#0000FF">*      others                        = 4</font>
+  ).
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*     WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_SALE_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_sale_data .
+
+  DATA: lv_today TYPE sy-datum,
+        lv_from  TYPE sy-datum.
+<font color ="#0000FF">*        LV_FLAG  TYPE C LENGTH 1.</font>
+
+
+  lv_today = sy-datum. "오늘 지정
+
+<font color ="#0000FF">*  CLEAR: so_vdatu[].</font>
+
+<font color ="#0000FF">*  IF p_today = 'X'.</font>
+<font color ="#0000FF">*    lv_from = lv_today.</font>
+<font color ="#0000FF">*    APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_from ) TO so_vdatu.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ELSEIF p_7days = 'X'.</font>
+<font color ="#0000FF">*    lv_from = lv_today + 7.</font>
+<font color ="#0000FF">*    APPEND VALUE #( sign = 'I' option = 'BT' low = lv_today  high = lv_from ) TO so_vdatu.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ELSEIF p_all = 'X'.</font>
+<font color ="#0000FF">*    CLEAR so_vdatu[]. " 전체일 경우 필터 없이 조회</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+
+  SELECT a~sales_no,
+         a~vbeln,
+         a~seqno,
+         a~cuscode,
+        a~vdatu,
+        a~netwr,
+        a~waers,
+        a~status10,
+        a~bpadrr,
+        b~status11
+    FROM zca_sdt080 AS a
+    LEFT OUTER JOIN zca_sdt180 AS b
+    ON a~sales_no = b~sales_no
+  WHERE ( a~sales_no = @pa_saln OR @pa_saln IS INITIAL )
+    AND ( a~cuscode = @pa_cusc OR @pa_cusc IS INITIAL )
+    AND ( vdatu IN @so_vdatu ) " 전체 선택시 vdatu 무시
+    AND status4 &lt;&gt; 'X'                           " 출고 안 된 건만
+    AND status9 = 'A'                         " 여신점검 통과한것만
+  INTO CORRESPONDING FIELDS OF TABLE @gt_sale.
+
+  IF gt_sale IS INITIAL.
+    MESSAGE '검색 결과가 없습니다.' TYPE 'S' DISPLAY LIKE 'E'.
+    EXIT. " 또는 LEAVE TO SCREEN 0.
+  ENDIF.
+
+  LOOP AT gt_sale INTO gs_sale.
+    IF gs_sale-status10 = 'X'.
+      gs_sale-icon_status10 = icon_checked.
+    ELSE.
+      gs_sale-icon_status10 = icon_incomplete.
+    ENDIF.
+    IF gs_sale-status11 = 'X'.
+      gs_sale-icon_status11 = icon_checked.
+    ELSE.
+      gs_sale-icon_status11 = icon_incomplete.
+    ENDIF.
+
+    call function <a href ="zca_pp_complete_flag/zca_pp_complete_flag.html">'ZCA_PP_COMPLETE_FLAG'</a>
+      EXPORTING
+        iv_date = gs_sale-vdatu                 " Field of type DATS
+      IMPORTING
+        ev_flag = gv_flag.                 " ' ' = 생산 미완료 / 'X' = 생산 완료
+
+    IF gv_flag EQ abap_on.
+<font color ="#0000FF">*      gs_sale-icon_comp = ABAP_ON.</font>
+      gs_sale-icon_comp = icon_checked.
+    ELSE.
+      gs_sale-icon_comp = icon_incomplete.
+    ENDIF.
+
+    CLEAR gv_flag.
+
+    MODIFY gt_sale FROM gs_sale.
+  ENDLOOP.
+
+<font color ="#0000FF">*  SELECT a~status10, b~status11</font>
+<font color ="#0000FF">*    FROM zca_sdt080 AS a</font>
+<font color ="#0000FF">*    INNER JOIN zca_sdt180 AS b</font>
+<font color ="#0000FF">*    ON a~sales_no = b~sales_no</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE @gt_status10</font>
+<font color ="#0000FF">*    WHERE status4 = ' '</font>
+<font color ="#0000FF">*    and status9 = 'A'.</font>
+
+<font color ="#0000FF">*  SELECT * FROM zca_sdt080</font>
+<font color ="#0000FF">*    WHERE ( sales_no = @pa_saln OR @pa_saln IS INITIAL )</font>
+<font color ="#0000FF">*    AND ( cuscode = @pa_cusc OR @pa_cusc IS INITIAL )</font>
+<font color ="#0000FF">*    AND  vdatu IN @so_vdatu</font>
+<font color ="#0000FF">*    AND status4 = ' ' "출고 안된것만</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE @gt_sale.</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CAT_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_field_cat_0110 .
+  REFRESH gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'ICON'.
+  gs_field_cat_0110-icon = 'X'.
+  gs_field_cat_0110-coltext   = '재고 상태'.
+  gs_field_cat_0110-outputlen = 4.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'SALES_NO'.
+  gs_field_cat_0110-hotspot = 'X'.
+  gs_field_cat_0110-key = 'X'.
+  gs_field_cat_0110-coltext   = '판매 오더 번호'.
+  gs_field_cat_0110-outputlen = 15.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'VBELN'.
+  gs_field_cat_0110-coltext   = '계약 문서 번호'.
+  gs_field_cat_0110-outputlen = 15.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'SEQNO'.
+  gs_field_cat_0110-coltext   = '납품 순번'.
+  gs_field_cat_0110-outputlen = 5.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'CUSCODE'.
+  gs_field_cat_0110-coltext   = '고객 코드'.
+  gs_field_cat_0110-outputlen = 10.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'VDATU'.
+  gs_field_cat_0110-coltext   = '납기 요청일'.
+  gs_field_cat_0110-outputlen = 10.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'NETWR'.
+  gs_field_cat_0110-coltext   = '총 주문 금액'.
+  gs_field_cat_0110-outputlen = 20.
+  gs_field_cat_0110-cfieldname    = 'WAERS'.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'WAERS'.
+  gs_field_cat_0110-coltext   = '통화코드'.
+  gs_field_cat_0110-outputlen = 5.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'BPADRR'.
+  gs_field_cat_0110-coltext   = '배송지'.
+<font color ="#0000FF">*  gs_field_cat_0110-hotspot = 'x'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 20.</font>
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'ICON_STATUS10'.
+  gs_field_cat_0110-icon = 'X'.
+  gs_field_cat_0110-coltext   = '재고이전요청'.
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'ICON_STATUS11'.
+  gs_field_cat_0110-icon = 'X'.
+  gs_field_cat_0110-coltext   = '재고이전완료'.
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'ICON_COMP'.
+<font color ="#0000FF">*  gs_field_cat_0110-checkbox = 'X'.</font>
+  gs_field_cat_0110-icon = 'X'.
+  gs_field_cat_0110-coltext   = '생산완료여부'.
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+<font color ="#0000FF">*  CLEAR gs_field_cat_0110.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-fieldname = 'STATUS4'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-coltext   = '출고여부'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0110 TO gt_field_cat_0110.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR gs_field_cat_0110.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-fieldname = 'STATUS9'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-coltext   = '여신점검여부'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0110 TO gt_field_cat_0110.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR gs_field_cat_0110.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-fieldname = 'STATUS2'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-coltext   = '대금청구문서 생성 여부'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0110 TO gt_field_cat_0110.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR gs_field_cat_0110.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-fieldname = 'STATUS3'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-coltext   = '수금완료여부'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0110 TO gt_field_cat_0110.</font>
+
+<font color ="#0000FF">*  CLEAR gs_field_cat_0110.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-fieldname = 'LOEVM'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-coltext   = '삭제 플래그'.</font>
+<font color ="#0000FF">*  gs_field_cat_0110-outputlen = 5.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0110 TO gt_field_cat_0110.</font>
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYOUT_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_layout_0110 .
+  CLEAR gs_layout_0110.
+
+  gs_layout_0110-sel_mode = 'B'.
+  gs_layout_0110-zebra = abap_on.
+  gs_layout_0110-cwidth_opt = 'A'.
+<font color ="#0000FF">*  gs_layout_0110-info_fname = 'CELLCOLOR'. "클릭한 색깔 지정을 위함.</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0120 .
+  CREATE OBJECT go_container_0120
+    EXPORTING
+      container_name = 'CCON120_L'.                " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_container_0120_2
+    EXPORTING
+      container_name = 'CCON120_R'.                " Name of the Screen CustCtrl Name to Link Container To
+
+  " container - screen 연결
+  CREATE OBJECT go_alv_0120
+    EXPORTING
+      i_parent = go_container_0120.                " Parent Container
+
+  CREATE OBJECT go_alv_0120_2
+    EXPORTING
+      i_parent = go_container_0120_2.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_LAYOUT_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_layout_0120 .
+  gs_layout_0120-cwidth_opt = 'A'.
+  gs_layout_0120-zebra = 'X'.
+  gs_layout_0120-sel_mode = 'B'.
+  gs_layout_0120-info_fname = 'CELLCOLOR'. "클릭한 색깔 지정을 위함.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_FIELD_CAT_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_field_cat_0120 .
+  REFRESH gt_field_cat_0120.
+
+<font color ="#0000FF">* OUTNUM</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'OUTNUM'.
+  gs_field_cat_0120-hotspot = 'X'.
+  gs_field_cat_0120-coltext   = '출고문서번호'.
+  gs_field_cat_0120-outputlen = 10.
+  gs_field_cat_0120-key       = 'X'.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* SALES_NO</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'SALES_NO'.
+  gs_field_cat_0120-coltext   = '판매오더번호'.
+  gs_field_cat_0120-outputlen = 10.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* CUSCODE</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'CUSCODE'.
+  gs_field_cat_0120-coltext   = '고객코드'.
+  gs_field_cat_0120-outputlen = 5.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* BPADRR</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'BPADRR'.
+  gs_field_cat_0120-coltext   = '배송지'.
+  gs_field_cat_0120-outputlen = 50.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* WERKS</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'WERKS'.
+  gs_field_cat_0120-coltext   = '플랜트 ID'.
+  gs_field_cat_0120-outputlen = 4.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* lgort</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'LGORT'.
+  gs_field_cat_0120-coltext   = '창고코드'.
+  gs_field_cat_0120-outputlen = 4.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* LFDAT</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'LFDAT'.
+  gs_field_cat_0120-coltext   = '출고 요청일'.
+  gs_field_cat_0120-outputlen = 8.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">*ERDAT</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'ERDAT'.
+  gs_field_cat_0120-coltext   = '문서 생성일'.
+  gs_field_cat_0120-datatype  = 'DATS'.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+<font color ="#0000FF">* STATUS4</font>
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'STATUS4'.
+  gs_field_cat_0120-coltext   = '출고 여부'.
+  gs_field_cat_0120-outputlen = 1.
+  gs_field_cat_0120-checkbox = 'X'.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_DISPLAY_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_display_0120 .
+  DATA gs_variant_0120 TYPE disvariant.
+  gs_variant_0120-report = sy-cprog.
+  gs_variant_0120-variant = '/SOUT'.
+  DATA gs_variant_0120_I TYPE disvariant.
+  go_alv_0120-&gt;set_table_for_first_display(
+    EXPORTING
+<font color ="#0000FF">*      i_structure_name               =  'ZCA_sdt100'                " Internal Output Table Structure Name</font>
+      is_variant                     =   gs_variant_0120               " Layout
+      i_save                         =  'A'                  " Save Layout
+<font color ="#0000FF">*      i_default                      = 'X'              " Default Display Variant</font>
+      is_layout                       =  gs_layout_0120               " Layout
+    CHANGING
+      it_outtab                       =  gt_out                " Output Table
+      it_fieldcatalog                 =  gt_field_cat_0120                " Field Catalog
+ ).
+
+  CALL METHOD go_alv_0120_2-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name              =                  " Internal Output Table Structure Name</font>
+<font color ="#0000FF">*     is_variant      =                  " Layout</font>
+      i_save          = 'A'                   " Save Layout
+<font color ="#0000FF">*     i_default       = 'X'              " Default Display Variant</font>
+      is_layout       = gs_layout_0120                  " Layout
+    CHANGING
+      it_outtab       = gt_out_i                 " Output Table
+      it_fieldcatalog = gt_field_cat_0120_2.                " Field Catalog
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SELECT_OUTBOUND_DATA</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_outbound_data .
+  SELECT * FROM zca_sdt100
+     WHERE ( sales_no = @pa_saln OR @pa_saln IS INITIAL )
+    AND ( cuscode = @pa_cusc OR @pa_cusc IS INITIAL )
+<font color ="#0000FF">*    AND ( LFDAT IN @so_vdatu ) " 전체 선택시 vdatu 무시</font>
+    INTO CORRESPONDING FIELDS OF TABLE @gt_out.
+
+  IF gt_out IS INITIAL.
+    MESSAGE '검색 결과가 없습니다.' TYPE 'S' DISPLAY LIKE 'E'.
+    EXIT. " 또는 LEAVE TO SCREEN 0.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form selct_mat</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; PV_CHARG</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM selct_mat  USING    p_pv_charg TYPE zca_mmt010-charg.
+<font color ="#0000FF">*  WHILE 항상 참.</font>
+<font color ="#0000FF">*   IF 남풉 수량이 저장된 변수 &gt;= 0 .</font>
+<font color ="#0000FF">*     SELECT 배치별 개수 from 배치 테이블</font>
+<font color ="#0000FF">*    where p_pv_charg</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF 데이터 저장할 itab</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*     itab에서 저장된 배치별 개수를 변수에 저장</font>
+<font color ="#0000FF">*     if(납품 수량이 저장된 변수 &gt;= 배치별 개수 ).</font>
+<font color ="#0000FF">*       납품 수량이 저장된 변수 =  남품 수량이 저장된 변수 -  배치별 개수</font>
+<font color ="#0000FF">*       배치번호 + 1</font>
+<font color ="#0000FF">*       db 테이블 변경 ( 현재 배치 번호에 flag x 표시 )</font>
+<font color ="#0000FF">*     elseif.</font>
+<font color ="#0000FF">*        납품 수양이 저장된 변수 - (배치별 개수 - 납품 수량이 저장된 변수).</font>
+<font color ="#0000FF">*        exit.</font>
+<font color ="#0000FF">*     endif.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*  ENDWHILE.</font>
+  DATA: lv_charg_char TYPE char10, " 초기 배치번호 (문자형)
+        lv_charg_num  TYPE i,
+        lv_deliv_qty  TYPE i,           "납품 수량
+        lv_btqty      TYPE i.                      " 배치별 재고 수량
+  lv_charg_char = p_pv_charg.
+
+  " 납품 수량 초기화 (예시로 고정값, 실제론 파라미터나 DB 조회)
+  lv_deliv_qty = 80. " 예: 납품해야 할 총 수량
+
+  WHILE lv_deliv_qty &gt; 0.
+
+    " 1. 현재 배치번호에 해당하는 재고 SELECT
+    SELECT SINGLE btqty
+      INTO @lv_BTQTY
+      FROM zca_mmt010
+     WHERE charg = @lv_charg_char
+       AND lvorm &lt;&gt; 'X'.
+
+    IF sy-subrc &lt;&gt; 0.
+      " 다음 배치로 넘어가기 위해 번호 +1
+      lv_charg_num = lv_charg_char + 0.
+      lv_charg_num = lv_charg_num + 1.
+      lv_charg_char = lv_charg_num.
+      CONTINUE.
+    ENDIF.
+
+    " 2. 출고 수량보다 크거나 같을 경우
+    IF lv_deliv_qty &gt;= lv_BTQTY.
+      " 재고 소진 처리
+      lv_deliv_qty = lv_deliv_qty - lv_BTQTY.
+
+      UPDATE zca_mmt010
+         SET lvorm = 'X'
+       WHERE charg = @lv_charg_char.
+
+    ELSE.
+      " 재고 일부만 사용
+      UPDATE zca_mmt010
+         SET btqty = btqty - @lv_deliv_qty
+       WHERE charg = @lv_charg_char.
+
+      EXIT. " 다 채웠으니 종료
+    ENDIF.
+
+    " 3. 다음 배치번호 준비
+    lv_charg_num = lv_charg_char + 0.
+    lv_charg_num = lv_charg_num + 1.
+<font color ="#0000FF">*    lv_charg_char = CONV char10( lv_charg_num ).</font>
+    lv_charg_char = |{ lv_charg_num }|.
+    CONDENSE lv_charg_char NO-GAPS.
+  ENDWHILE.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_event_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_event_0110 .
+  SET HANDLER lcl_event_handler=&gt;on_hotspot_click FOR go_alv_0110.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0130 .
+  CREATE OBJECT go_container_0130
+    EXPORTING
+      container_name = 'CCON_M'.               " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_0130
+    EXPORTING
+      i_parent = go_container_0130.                " Parent Container
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_display_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_display_0130 .
+  gs_variant_0130-report = sy-repid.          " 현재 프로그램
+  gs_variant_0130-variant = '/L130'.         " 고정 레이아웃 이름
+
+  CALL METHOD go_alv_0130-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name              =                  " Internal Output Table Structure Name</font>
+      is_variant      = gs_variant_0130                 " Layout
+      i_save          = 'A'               " Save Layout
+      is_layout       = gs_layout_0130                " Layout
+    CHANGING
+      it_outtab       = gt_mat                " Output Table
+      it_fieldcatalog = gt_field_cat_0130                 " Field Catalog
+<font color ="#0000FF">*     it_sort         =                  " Sort Criteria</font>
+<font color ="#0000FF">*     it_filter       =                  " Filter Criteria</font>
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*     invalid_parameter_combination = 1                " Wrong Parameter</font>
+<font color ="#0000FF">*     program_error   = 2                " Program Errors</font>
+<font color ="#0000FF">*     too_many_lines  = 3                " Too many Rows in Ready for Input Grid</font>
+<font color ="#0000FF">*     others          = 4</font>
+    .
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*     WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_field_cat_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_field_cat_0130 .
+  REFRESH gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'ICON'.
+  gs_field_cat_0130-icon = 'X'.
+  gs_field_cat_0130-coltext = '재고 상태'.
+  gs_field_cat_0130-outputlen = 4.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'SALESNO'.
+  gs_field_cat_0130-coltext = '판매 오더 번호'.
+  gs_field_cat_0130-key = 'X'.
+  gs_field_cat_0130-outputlen = 15.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'vposn'.
+  gs_field_cat_0130-coltext = '납품 순번'.
+  gs_field_cat_0130-key = 'X'.
+  gs_field_cat_0130-outputlen = 5.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'MATNR'.
+  gs_field_cat_0130-coltext = '자재코드'.
+  gs_field_cat_0130-outputlen = 20.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'MAKTX'.
+  gs_field_cat_0130-coltext = '자재명'.
+  gs_field_cat_0130-outputlen = 40.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'CHARG'.
+  gs_field_cat_0130-coltext = '배치번호'.
+  gs_field_cat_0130-outputlen = 10.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname  = 'VFDAT'.
+  gs_field_cat_0130-coltext    = '유통기한 만료일'.
+  gs_field_cat_0130-outputlen  = 10.
+  gs_field_cat_0130-datatype   = 'DATS'. " 날짜 필드
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'DELIVQTY'.
+  gs_field_cat_0130-coltext = '납품 수량'.
+  gs_field_cat_0130-outputlen = 15.
+  gs_field_cat_0130-qfieldname = 'MEINS'. "단위문제
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'BTQTY'.
+  gs_field_cat_0130-coltext = '배치별 수량'.
+  gs_field_cat_0130-outputlen = 15.
+<font color ="#0000FF">*  gs_field_cat_0130-cfieldname = 'MEINS'.</font>
+  gs_field_cat_0130-qfieldname = 'MEINS'.
+  gs_field_cat_0130-do_sum = ''.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'MEINS'.
+  gs_field_cat_0130-coltext = '단위'.
+  gs_field_cat_0130-outputlen = 3.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname     = 'NETWR'.
+  gs_field_cat_0130-coltext       = '총 주문 금액'.
+  gs_field_cat_0130-outputlen     = 15.
+  gs_field_cat_0130-datatype      = 'CURR'.
+  gs_field_cat_0130-cfieldname    = 'WAERS'.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname  = 'WAERS'.
+  gs_field_cat_0130-coltext    = '통화코드'.
+  gs_field_cat_0130-outputlen  = 5.
+  gs_field_cat_0130-datatype   = 'CUKY'. " 통화 단위 필드
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname  = 'LVORM'.
+  gs_field_cat_0130-coltext    = '삭제코드'.
+  gs_field_cat_0130-outputlen  = 5.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form process_out</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM process_out .
+  DATA: gt_outnum_row TYPE lvc_t_row,
+        gs_outnum_row TYPE lvc_s_row.
+
+  CLEAR pv_agree. " 체크박스 초기화
+
+<font color ="#0000FF">* 선택한 줄 가져오기</font>
+  CALL METHOD go_alv_0110-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_outnum_row.
+
+<font color ="#0000FF">* 선택한 줄이 없으면 메시지</font>
+  IF gt_outnum_row IS INITIAL.
+    MESSAGE s305 DISPLAY LIKE 'E'.
+    RETURN.
+  ENDIF.
+
+<font color ="#0000FF">* 하나씩 처리</font>
+<font color ="#0000FF">*  LOOP AT gt_outnum_rows INTO gs_outnum_row.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    READ TABLE gt_sale INTO gs_sale INDEX gs_outnum_row-index.</font>
+<font color ="#0000FF">*    IF sy-subrc = 0.</font>
+<font color ="#0000FF">**      IF gv_prev_index IS NOT INITIAL.</font>
+<font color ="#0000FF">**        CLEAR gs_sale-cellcolor. " 색 초기화</font>
+<font color ="#0000FF">**</font>
+<font color ="#0000FF">**        MODIFY gt_sale FROM gs_sale "gt_sale에 반영</font>
+<font color ="#0000FF">**        INDEX gv_prev_index</font>
+<font color ="#0000FF">**        TRANSPORTING cellcolor.</font>
+<font color ="#0000FF">**      ENDIF.</font>
+<font color ="#0000FF">*      gs_sale-cellcolor = 'C310'.</font>
+<font color ="#0000FF">*      MODIFY gt_sale FROM gs_sale</font>
+<font color ="#0000FF">*      INDEX gs_outnum_row-index</font>
+<font color ="#0000FF">*      TRANSPORTING cellcolor.</font>
+<font color ="#0000FF">*      " 여기서 출고 처리 로직 넣기</font>
+<font color ="#0000FF">*      gv_sel_SALESNO = gs_sale-sales_no. " 예: 선택한 판매오더 번호 가져오기</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      " 팝업 띄워서 확인할 수도 있고</font>
+<font color ="#0000FF">*      MESSAGE |{ gv_sel_SALESNO } 판매오더 출고를 처리합니다.| TYPE 'S'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+
+  DATA: lv_status10 TYPE zca_status10,
+        lv_status11 TYPE zca_status11.
+
+  READ TABLE gt_outnum_row INTO gs_outnum_row INDEX 1.
+  IF sy-subrc = 0.
+    READ TABLE gt_sale INTO gs_sale INDEX gs_outnum_row-index.
+<font color ="#0000FF">*      gs_sale-cellcolor = 'C310'.</font>
+<font color ="#0000FF">*      MODIFY gt_sale FROM gs_sale</font>
+<font color ="#0000FF">*      INDEX gs_outnum_row-index</font>
+<font color ="#0000FF">*      TRANSPORTING cellcolor.</font>
+    IF sy-subrc = 0.
+      gv_sel_SALESNO = gs_sale-sales_no. "선택한 판매오더 번호 가져오기
+
+<font color ="#0000FF">*      PERFORM set_info USING gv_sel_salesno.  "추가</font>
+
+      "출하지시, 재고 이전 진행되는지 판단
+      SELECT SINGLE a~status10, b~status11
+       INTO (@lv_status10, @lv_status11)
+       FROM zca_sdt080 AS a
+        INNER JOIN zca_sdt180 AS b
+        ON a~sales_no = b~sales_no
+       WHERE a~sales_no = @gv_sel_salesno.
+
+      IF lv_status10 &lt;&gt; 'X'. "재고 이전 요청이 안됨.
+        MESSAGE s309 DISPLAY LIKE 'E'. "재고 이전 요청이 완료되지 않아 출고할 수 없습니다.
+        RETURN.
+      ELSEIF lv_status11 &lt;&gt;'X'. " 재고 이전이 안됨
+        MESSAGE s312 DISPLAY LIKE 'E'. "아직 제품이 물류센터로 이동되지 않았서 출하할 수 없습니다.
+        RETURN.
+      ELSE.
+        MESSAGE s308 WITH gv_sel_salesno. "판매오더 { gv_sel_SALESNO } 출하 처리합니다.
+        "출하 문서에 보일 예상 출고 문서 번호
+        PERFORM set_outnum.
+        "출하(140 스크린) ALV 데이터 SELECT
+        PERFORM select_out_item USING gv_sel_salesno.
+
+        PERFORM set_info_0130 USING gv_sel_salesno..
+        PERFORM set_info USING gv_sel_salesno.  "이거 140번에 넣어주고 지워주기
+      ENDIF.
+      CALL SCREEN 140 STARTING AT 10 5 ENDING AT 161 32.
+    ENDIF.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_info</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM SET_info  USING    pv_SALES_NO TYPE zca_sdt080-sales_no.
+
+  "자재이동 INFO
+  SELECT SINGLE kunnr,
+        name1,
+        bpcsnr,
+        bphaed,
+        bpadrr,
+        zemail
+    FROM zca_sd_cdsv_020
+    INTO CORRESPONDING FIELDS OF @gs_info
+    WHERE salesno = @pv_sales_no.
+
+  zca_kna1-kunnr = gs_info-kunnr.
+  zca_kna1-name1 = gs_info-name1.
+  zca_kna1-bpcsnr = gs_info-bpcsnr.
+  zca_kna1-bphaed = gs_info-bphaed.
+  zca_kna1-bpadrr = gs_info-bpadrr.
+  zca_kna1-zemail = gs_info-zemail.
+  addr = gs_info-bpadrr.
+
+<font color ="#0000FF">*  "130번 화면 재고 관련 INFO</font>
+<font color ="#0000FF">*  SELECT</font>
+<font color ="#0000FF">*      salesno,</font>
+<font color ="#0000FF">*      matnr,</font>
+<font color ="#0000FF">*      werks,</font>
+<font color ="#0000FF">*      lgort,</font>
+<font color ="#0000FF">*      mattype</font>
+<font color ="#0000FF">* FROM ZCA_sd_cdsv_040</font>
+<font color ="#0000FF">*  INTO CORRESPONDING FIELDS OF TABLE @gT_info_130</font>
+<font color ="#0000FF">*  WHERE salesno = @pv_sales_no</font>
+<font color ="#0000FF">*    AND werks = 'P001'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  "제품별로 SORT후 인접한 같은 재품코드 없애기</font>
+<font color ="#0000FF">*  SORT gt_info_130 BY matnr.</font>
+<font color ="#0000FF">*  DELETE ADJACENT DUPLICATES FROM gt_info_130 COMPARING matnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: lv_mat_count TYPE i.</font>
+<font color ="#0000FF">*  lv_mat_count = lines( gt_info_130 ).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  IF lv_mat_count = 1.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    " 자재 1개일 경우</font>
+<font color ="#0000FF">*    READ TABLE gt_info_130 INTO gs_info_130 INDEX 1.</font>
+<font color ="#0000FF">*    werks130  = gs_info_130-werks.</font>
+<font color ="#0000FF">*    lgort130 = gs_info_130-lgort.</font>
+<font color ="#0000FF">*  ELSE.</font>
+<font color ="#0000FF">*    " 자재 여러 개일 경우</font>
+<font color ="#0000FF">**    LOOP AT gt_info INTO gs_info.</font>
+<font color ="#0000FF">*    werks130 = 'P001'. "P001,P002..</font>
+<font color ="#0000FF">*    lgort130 = 'SL01'.</font>
+<font color ="#0000FF">*    lgobe130 = '완제품창고'.</font>
+<font color ="#0000FF">*    lgort130_2 = 'SL02'.</font>
+<font color ="#0000FF">*    lgobe130_2 = '반제품창고'.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+  SELECT SINGLE pname, lgobe FROM zca_mmv120
+    INTO CORRESPONDING FIELDS OF @gs_info
+    WHERE werks = @zca_mard-werks
+    AND lgort = @zca_mard-lgort.
+  zca_t001w-pname = gs_info-pname.
+  zca_mard-lgobe = gs_info-lgobe.
+
+  SELECT SINGLE sales_no, vdatu, bpadrr
+   FROM zca_sdt080
+    INTO CORRESPONDING FIELDS OF @gs_info
+    WHERE sales_no = @pv_sales_no.
+  zca_sdt080-vdatu = gs_info-vdatu.
+  zca_sdt080-sales_no = gs_info-sales_no.
+  zca_sdt080-bpadrr = gs_info-bpadrr.
+  today = sy-datum.
+
+  "출고 물류센터 info
+<font color ="#0000FF">*  SELECT SINGLE lgort, lgobe, werks</font>
+<font color ="#0000FF">*  FROM zca_sdt160</font>
+<font color ="#0000FF">*  INTO CORRESPONDING FIELDS OF @gs_info</font>
+<font color ="#0000FF">*  WHERE pname = @cargo2.</font>
+<font color ="#0000FF">*  plant_id2 = gs_info-werks.</font>
+<font color ="#0000FF">*  sto_lo2 = gs_info-lgort.</font>
+<font color ="#0000FF">*  lgobe2 = gs_info-lgobe.</font>
+  SELECT SINGLE a~lgort, a~werks, b~lgobe, b~pname
+    FROM zca_sdt180 AS a
+    INNER JOIN zca_sdt160 AS b
+    ON a~lgort = b~lgort
+    INTO CORRESPONDING FIELDS OF @gs_info
+    WHERE sales_no = @gv_sel_salesno.
+  plant_id2 = gs_info-werks.
+  sto_lo2 = gs_info-lgort.
+  lgobe3 = gs_info-lgobe.
+  cargo2 = gs_info-pname.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form move_mat</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM move_mat  USING    pv_sales_no TYPE zca_sdt080-sales_no.
+<font color ="#0000FF">*  TABLES: zca_mmt010.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  SELECT * FROM zca_sdt090</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE gt_sel_mat</font>
+<font color ="#0000FF">*    WHERE sales_no EQ pv_sales_no.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: lt_mmt010_F TYPE TABLE OF zca_mmt010,  " 출발 배치</font>
+<font color ="#0000FF">*        ls_mmt010_F LIKE LINE OF  lt_mmt010_f,</font>
+<font color ="#0000FF">*        lt_mmt010_T TYPE TABLE OF zca_mmt010,  " 도착 배치</font>
+<font color ="#0000FF">*        ls_mmt010_T LIKE LINE OF  lt_mmt010_f,</font>
+<font color ="#0000FF">*        lt_mmt010   TYPE TABLE OF zca_mmt010,</font>
+<font color ="#0000FF">*        ls_mmt010   LIKE LINE OF  lt_mmt010_f.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: lt_data  TYPE TABLE OF zca_mmt010,</font>
+<font color ="#0000FF">*        ls_data  LIKE LINE OF  lt_data,</font>
+<font color ="#0000FF">*        lv_lines TYPE sy-tabix.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: l_num1 TYPE zca_btqty,                   " 수량 계산용</font>
+<font color ="#0000FF">*        l_num2 TYPE zca_btqty,</font>
+<font color ="#0000FF">*        l_num3 TYPE char0010,                    " 배치정보 비교용</font>
+<font color ="#0000FF">*        l_num4 TYPE char0010.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  LOOP AT gt_sel_mat INTO gs_sel_mat.</font>
+<font color ="#0000FF">*    SELECT * FROM zca_mmt010 INTO TABLE lt_mmt010_f " 출발한 창고에서 배치를 유통기한 배치번호별로 정렬</font>
+<font color ="#0000FF">*    WHERE matnr = gs_sel_mat-matnr</font>
+<font color ="#0000FF">*      AND werks = 'P001'</font>
+<font color ="#0000FF">*      AND ( lgort = 'SL01' OR lgort = 'SL02' )</font>
+<font color ="#0000FF">*      AND lvorm &lt;&gt; 'X'</font>
+<font color ="#0000FF">*    ORDER BY vfdat ASCENDING charg ASCENDING.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT lt_mmt010_f INTO ls_mmt010_f.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 뺼 수량 &gt; 배치 수량</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF ls_mmt010_f-btqty &lt;= gs_sel_mat-deliv_qty.               " 수량보다 배치가 작으면 재고를 0으로 만들고 x표시</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 뺴는 로직</font>
+<font color ="#0000FF">*        l_num1 = ls_mmt010_f-btqty.                 " l_num1에다가 배치수량정보 저장</font>
+<font color ="#0000FF">*        ls_mmt010_f-btqty = 0.                      " 배치수량 0표시</font>
+<font color ="#0000FF">*        ls_mmt010_f-lvorm = 'X'.                    " 삭제표시</font>
+<font color ="#0000FF">*        gs_sel_mat-deliv_qty -= l_num1.            " 배치수량만큼 총수량을 뺴준다.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        UPDATE zca_mmt010 FROM ls_mmt010_f.         " UPDATE</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 배치수량 &gt; 뺼 수량</font>
+<font color ="#0000FF">*      ELSEIF ls_mmt010_f-btqty &gt; gs_sel_mat-deliv_qty.            " 배치 수량이 총 뺴줘야 하는 수량보다 많다면</font>
+<font color ="#0000FF">** 뺴는 로직</font>
+<font color ="#0000FF">*        ls_mmt010_f-btqty -= gs_sel_mat-deliv_qty.                " 배치 수량에서 빼줄수량 -</font>
+<font color ="#0000FF">*        UPDATE zca_mmt010 FROM ls_mmt010_f.         " 출발창고 배치정보 업데이트</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+  " 출고 flag 변경시켜줘야 함.
+  UPDATE zca_sdt080
+      SET status4 = 'X'        " 출고 완료 표시
+    WHERE sales_no = pv_sales_no.
+
+  TABLES: zca_mmt010.
+  DATA: lv_werks TYPE zca_werks,
+        lv_lgort TYPE zca_lgort.
+
+
+  SELECT * FROM zca_sdt090
+    INTO CORRESPONDING FIELDS OF TABLE gt_sel_mat
+    WHERE sales_no EQ pv_sales_no.
+
+  SELECT SINGLE werks, lgort
+    FROM zca_sdt180
+    INTO (@lv_werks, @lv_lgort)
+    WHERE sales_no EQ @pv_sales_no.
+
+  DATA: lt_mmt010_F TYPE TABLE OF zca_mmt010,  " 출발 배치
+        ls_mmt010_F LIKE LINE OF  lt_mmt010_f,
+        lt_mmt010_T TYPE TABLE OF zca_mmt010,  " 도착 배치
+        ls_mmt010_T LIKE LINE OF  lt_mmt010_f,
+        lt_mmt010   TYPE TABLE OF zca_mmt010,
+        ls_mmt010   LIKE LINE OF  lt_mmt010_f.
+
+  DATA: lt_data  TYPE TABLE OF zca_mmt010,
+        ls_data  LIKE LINE OF  lt_data,
+        lv_lines TYPE sy-tabix.
+
+  DATA: l_num1 TYPE zca_btqty,                   " 수량 계산용
+        l_num2 TYPE zca_btqty,
+        l_num3 TYPE char0010,                    " 배치정보 비교용
+        l_num4 TYPE char0010.
+
+  LOOP AT gt_sel_mat INTO gs_sel_mat.
+
+
+    call function <a href ="zca_mm_minus_batch/zca_mm_minus_batch.html">'ZCA_MM_MINUS_BATCH'</a>
+      EXPORTING
+        iv_matnr = gs_sel_mat-matnr                " 자재코드
+        iv_btqty = gs_sel_mat-deliv_qty                " 수량
+        iv_werks = lv_werks                " 플랜트 ID
+        iv_lgort = lv_lgort             " 창고 코드 (저장 위치)
+        iv_bwart = '601'.                  " 이동 유형 코드
+
+    SELECT matnr, charg, werks, btqty,erdat, erzet
+      FROM zca_mmt010
+      INTO CORRESPONDING FIELDS OF TABLE @gt_charg
+      WHERE matnr = @gs_sel_mat-matnr
+      AND werks = @lv_werks
+      AND lgort = @lv_lgort
+      ORDER BY erdat, erzet.
+
+
+  ENDLOOP.
+
+
+<font color ="#0000FF">*  " 출고로 flag 변경</font>
+<font color ="#0000FF">*  UPDATE zca_sdt080</font>
+<font color ="#0000FF">*      SET status4 = 'X'        " 출고 완료 표시</font>
+<font color ="#0000FF">*    WHERE sales_no = pv_sales_no.</font>
+
+
+<font color ="#0000FF">*##function test##</font>
+<font color ="#0000FF">*  CALL FUNCTION 'ZCA_MM_MINUS_BATCH'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      iv_matnr = 'MAT40004'                " 자재코드</font>
+<font color ="#0000FF">*      iv_btqty = 1                " 수량</font>
+<font color ="#0000FF">*      iv_werks = 'P001'                " 플랜트 ID</font>
+<font color ="#0000FF">*      iv_lgort = 'SL01'            " 창고 코드 (저장 위치)</font>
+<font color ="#0000FF">*      iv_bwart = '601'.                  " 이동 유형</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form AUTO_MOVE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM recommend_wh  USING    pv_sales_no TYPE zca_sdt080-sales_no.
+  DATA: lv_first_word TYPE char20,
+        lv_dummy      TYPE char100,
+        lv_bpadrr     TYPE zca_sdt080-bpadrr.
+
+  SELECT SINGLE bpadrr FROM zca_sdt080
+    INTO @lv_bpadrr
+    WHERE sales_no = @pv_sales_no.
+
+  "띄어쓰기 기준으로 맨 앞자리 읽어오기 ( ex &gt; 경기도 )
+  SPLIT lv_bpadrr AT space INTO lv_first_word lv_dummy.
+
+  "추천 창고명 저장
+  SELECT SINGLE pname
+    FROM zca_sdt160
+    INTO @gv_pname
+    WHERE state = @lv_first_word.
+
+<font color ="#0000FF">*  "출고 물류센터 info</font>
+<font color ="#0000FF">*  SELECT SINGLE lgort, lgobe, werks</font>
+<font color ="#0000FF">*  FROM zca_sdt160</font>
+<font color ="#0000FF">*  INTO CORRESPONDING FIELDS OF @gs_info</font>
+<font color ="#0000FF">*  WHERE pname = @gv_pname.</font>
+<font color ="#0000FF">*  plant_id2 = gs_info-werks.</font>
+<font color ="#0000FF">*  sto_lo2 = gs_info-lgort.</font>
+<font color ="#0000FF">*  lgobe2 = gs_info-lgobe.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_outnum</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_outnum.
+<font color ="#0000FF">* 예상 출고 문서 번호 넣기</font>
+  DATA: lt_outnum TYPE TABLE OF zca_sdt100,
+        lS_outnum TYPE zca_sdt100.
+
+  SELECT outnum FROM zca_sdt100
+    INTO CORRESPONDING FIELDS OF TABLE lt_outnum.
+
+
+  IF sy-subrc &lt;&gt; 0. "select된게 없으면 아직 생성된 출고문서가 없는거
+    zca_sdt100-outnum = 'OUT0000001'. "첫번째 출고문서 번호
+  ELSE.
+    DATA(lv_last_idx) = lines( lt_outnum ).
+    READ TABLE lt_outnum INTO ls_outnum INDEX lv_last_idx.
+    IF sy-subrc EQ 0.
+      CONDENSE ls_outnum. " 공백 제거
+      "INFO 정보 넣어주기
+      zca_sdt100-outnum = ls_outnum.
+    ENDIF.
+  ENDIF.
+
+
+<font color ="#0000FF">*  " 출고 문서 번호 채번</font>
+<font color ="#0000FF">*  CALL FUNCTION 'NUMBER_GET_NEXT'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      nr_range_nr = '01'                " Number range number</font>
+<font color ="#0000FF">*      object      = 'ZCA_OUT'                " Name of number range object</font>
+<font color ="#0000FF">*    IMPORTING</font>
+<font color ="#0000FF">*      number      = gv_outnum                 " free number</font>
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*      OTHERS      = 1.</font>
+<font color ="#0000FF">*  IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*    MESSAGE '출고 문서 번호 생성 실패' TYPE 'S' DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*    EXIT.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*  gv_outnum = |OUT{ gv_outnum }|.</font>
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFERSH_ALL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refersh_all .
+  CLEAR: pa_saln,
+         pa_cusc.
+  REFRESH: gt_sale," ALV 띄우는 ITAB
+           so_vdatu, "selection option
+           gt_out ,
+           gt_out_i.
+  CALL METHOD go_alv_0110-&gt;refresh_table_display( ).
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_layout_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_layout_0130 .
+  gs_layout_0130-cwidth_opt = 'A'.
+  gs_layout_0130-zebra = 'X'.
+  gs_layout_0130-sel_mode = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0140 .
+  CREATE OBJECT go_container_0140
+    EXPORTING
+      container_name = 'CCON'.                " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_0140
+    EXPORTING
+      i_parent = go_container_0140.               " Parent Container
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_field_cat_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_field_cat_0140 .
+  REFRESH gt_field_cat_0140.
+
+<font color ="#0000FF">*  CLEAR gs_field_cat_0140.</font>
+<font color ="#0000FF">*  gs_field_cat_0140-fieldname = 'ICON'.</font>
+<font color ="#0000FF">*  gs_field_cat_0140-icon = 'X'.</font>
+<font color ="#0000FF">*  gs_field_cat_0140-coltext = '재고 상태'.</font>
+<font color ="#0000FF">*  gs_field_cat_0140-outputlen = 4.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0140 TO gt_field_cat_0140.</font>
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'SALES_NO'.
+  gs_field_cat_0140-coltext = '판매 오더 번호'.
+  gs_field_cat_0140-key = 'X'.
+  gs_field_cat_0140-outputlen = 15.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'VPOSN'.
+  gs_field_cat_0140-coltext = '납품 순번'.
+  gs_field_cat_0140-key = 'X'.
+  gs_field_cat_0140-outputlen = 5.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'MATNR'.
+  gs_field_cat_0140-coltext = '자재코드'.
+  gs_field_cat_0140-outputlen = 20.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'MAKTX'.
+  gs_field_cat_0140-coltext = '자재명'.
+  gs_field_cat_0140-outputlen = 20.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'DELIV_QTY'.
+  gs_field_cat_0140-coltext = '납품 수량'.
+  gs_field_cat_0140-outputlen = 10.
+  gs_field_cat_0140-qfieldname = 'MEINS'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+<font color ="#0000FF">*  CLEAR gs_field_cat_0130.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-fieldname = 'BTQTY'.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-coltext = '총 재고량'.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-outputlen = 15.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-cfieldname = 'MEINS'.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0130 TO gt_field_cat_0130.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR gs_field_cat_0130.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-fieldname = 'BTQTY'.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-coltext = '출고 후  재고량'.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-outputlen = 15.</font>
+<font color ="#0000FF">*  gs_field_cat_0130-cfieldname = 'MEINS'.</font>
+<font color ="#0000FF">*  APPEND gs_field_cat_0130 TO gt_field_cat_0130.</font>
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'MEINS'.
+  gs_field_cat_0140-coltext = '단위'.
+  gs_field_cat_0140-outputlen = 3.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname     = 'NETWR'.
+  gs_field_cat_0140-coltext       = '총 주문 금액'.
+  gs_field_cat_0140-outputlen     = 15.
+  gs_field_cat_0140-datatype      = 'CURR'.
+  gs_field_cat_0140-cfieldname    = 'WAERS'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname  = 'WAERS'.
+  gs_field_cat_0140-coltext    = '통화코드'.
+  gs_field_cat_0140-outputlen  = 5.
+  gs_field_cat_0140-datatype   = 'CUKY'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_layout_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_layout_0140 .
+  gs_layout_0140-cwidth_OPT = 'A'.
+  gs_layout_0140-zebra = 'X'.
+  gs_layout_0140-sel_mode = 'B'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_display_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_display_0140 .
+  gs_variant_0140-report = sy-repid.          " 현재 프로그램
+  gs_variant_0140-variant = '/S0130'.         " 고정 레이아웃 이름
+  CALL METHOD go_alv_0140-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name              =                  " Internal Output Table Structure Name</font>
+      is_variant                    = gs_variant_0140                 " Layout
+      i_save                        = 'A'                " Save Layout
+<font color ="#0000FF">*     i_default                     = 'X'              " Default Display Variant</font>
+      is_layout                     = gs_layout_0140                 " Layout
+    CHANGING
+      it_outtab                     = gt_OUT_ITEM              " Output Table
+      it_fieldcatalog               = gt_field_cat_0140               " Field Catalog
+    EXCEPTIONS
+      invalid_parameter_combination = 1                " Wrong Parameter
+      program_error                 = 2                " Program Errors
+      too_many_lines                = 3                " Too many Rows in Ready for Input Grid
+      OTHERS                        = 4.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE s318 DISPLAY LIKE 'E'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_out_item</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_out_item  USING pv_SALES_NO TYPE zca_sdt080-sales_no.
+  SELECT * FROM zca_sdt090 AS a
+    INNER JOIN zca_makt AS b
+    ON a~matnr = b~matnr
+    INTO CORRESPONDING FIELDS OF TABLE gt_out_item
+    WHERE a~sales_no = pv_sales_no
+    AND b~spras = '3'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_outdoc</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_outdoc .
+  DATA ls_outbound TYPE zca_sdt100. " INSERT할 구조
+
+<font color ="#0000FF">*출고 문서 번호 채번</font>
+<font color ="#0000FF">*  CALL FUNCTION 'NUMBER_GET_NEXT'</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      nr_range_nr = '01'                " Number range number</font>
+<font color ="#0000FF">*      object      = 'ZCA_OUT7'                " Name of number range object</font>
+<font color ="#0000FF">*    IMPORTING</font>
+<font color ="#0000FF">*      number      = gv_outnum                 " free number</font>
+<font color ="#0000FF">*    EXCEPTIONS</font>
+<font color ="#0000FF">*      OTHERS      = 1.</font>
+<font color ="#0000FF">*  IF sy-subrc &lt;&gt; 0.</font>
+<font color ="#0000FF">*    MESSAGE '출고 문서 번호 생성 실패' TYPE 'S' DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*    EXIT.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*  gv_outnum = |OUT{ gv_outnum }|.</font>
+
+<font color ="#0000FF">**출고 문서 번호</font>
+<font color ="#0000FF">*  SELECT SINGLE ship_req_no</font>
+<font color ="#0000FF">*    FROM zca_sdt180</font>
+<font color ="#0000FF">*    INTO @DATA(lv_req)</font>
+<font color ="#0000FF">*    WHERE sales_no = @gv_sel_salesno.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  gv_outnum = lv_req(10).</font>
+
+
+<font color ="#0000FF">* INSERT할 데이터 세팅</font>
+  "선택한 물류센터 플래트 id, 창고 코드 가져오기
+  DATA ls_wh TYPE zca_sdt160.
+
+  "출고될 물류센터 select
+  SELECT SINGLE werks, lgort
+    FROM zca_sdt180
+    INTO CORRESPONDING FIELDS OF @ls_wh
+    WHERE sales_no = @gv_sel_salesno.
+
+  "100번 출고 HEADER 테이블에 값 넣기
+  CLEAR ls_outbound.
+  ls_outbound-mandt    = sy-mandt.
+  ls_outbound-outnum = gv_outnum.            " 출고 문서 번호
+  ls_outbound-sales_no = gs_sale-sales_no.     " 판매오더 번호
+  ls_outbound-cuscode = gs_sale-cuscode.      " 고객 코드
+  ls_outbound-bpadrr  = gs_sale-bpadrr.     " 고객 주소
+  ls_outbound-werks = ls_wh-werks.             "플랜트 id
+  ls_outbound-lgort = ls_wh-lgort.             "창고코드
+  ls_outbound-lfdat = gs_sale-vdatu.              " 출고 요청일(납기 요청일)
+  ls_outbound-status4 = 'X'.                 " 출고여부
+  ls_outbound-status5 = ''.                 " 청구서 발행 여부
+  ls_outbound-ernam   = sy-uname.            " 생성자
+  ls_outbound-erdat   = sy-datum.            " 생성일자
+  ls_outbound-erzet   = sy-uzeit.            " 생성시간
+  ls_outbound-aenam   = ''.                  " 수정자 (초기엔 공백)
+  ls_outbound-aedat   = ''.                  " 수정일자 (초기엔 공백)
+  ls_outbound-aezet   = ''.                  " 수정시간 (초기엔 공백)
+
+  " DB INSERT
+  INSERT INTO zca_sdt100 VALUES ls_outbound.
+  " 또는 바로 출고 FUNCTION 호출
+<font color ="#0000FF">*       CALL FUNCTION 'Z_YOUR_OUTBOUND_FUNCTION' EXPORTING iv_vbeln = lv_vbeln.</font>
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE s304 DISPLAY LIKE 'E'. "테이블에 Insert 실패했습니다.
+    gv_stop_flag = 'STOP'. "밖 FORM문에서도 프로세스 중단하기 위한 FLAG
+    RETURN. " 프로그램 전체 종료 (START-OF-SELECTION 밖도 안 감)
+  ENDIF.
+
+
+
+
+<font color ="#0000FF">*110번 출고 ITEM 테이블에 값 넣기</font>
+  DATA: lt_sdt090 TYPE TABLE OF zca_sdt090,
+        ls_sdt090 TYPE zca_sdt090,
+        lt_sdt110 TYPE TABLE OF zca_sdt110,
+        ls_sdt110 TYPE zca_sdt110.
+
+  "판매오더 ITEM 조회
+  SELECT * FROM zca_sdt090
+    INTO TABLE @lt_sdt090
+    WHERE sales_no = @gv_sel_salesno.
+
+
+
+  LOOP AT lt_sdt090 INTO ls_sdt090. " 자재 기준 LOOP
+    DATA(lv_remain_qty) = ls_sdt090-deliv_qty. " 출고해야 할 수량
+
+<font color ="#0000FF">*    LOOP AT gt_charg INTO gs_charg .                  "matnr charg btqty</font>
+
+    CLEAR ls_sdt110.
+    ls_sdt110-mandt     = sy-mandt.
+    ls_sdt110-outnum    = gv_outnum.
+    ls_sdt110-vposn     = ls_sdt090-vposn.
+    ls_sdt110-matnr     = ls_sdt090-matnr.
+    ls_sdt110-werks     = ls_wh-werks.
+    ls_sdt110-lgort     = ls_wh-lgort.
+<font color ="#0000FF">*      ls_sdt110-charg     = gs_charg-charg.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ls_sdt110-lfqty     = gs_charg-btqty.</font>
+    ls_sdt110-lfqty     = ls_sdt090-deliv_qty.
+    ls_sdt110-meins     = ls_sdt090-meins.
+    ls_sdt110-ernam     = sy-uname.
+    ls_sdt110-erdat     = sy-datum.
+    ls_sdt110-erzet     = sy-uzeit.
+    ls_sdt110-aenam     = ''.
+    ls_sdt110-aedat     = ''.
+    ls_sdt110-aezet     = ''.
+
+    APPEND ls_sdt110 TO lt_sdt110.
+
+  ENDLOOP.
+  INSERT zca_sdt110 FROM TABLE lt_sdt110. "이거 바뀜
+
+  IF sy-subrc &lt;&gt; 0.
+    ROLLBACK WORK.
+    MESSAGE s348 DISPLAY LIKE 'E'. "'출고 item 테이블 저장 실패 - 전체 롤백됨'
+    gv_stop_flag = 'STOP'. "밖 FORM문에서도 프로세스 중단하기 위한 FLAG
+    RETURN. " 프로그램 전체 종료 (START-OF-SELECTION 밖도 안 감)
+  ENDIF.
+
+<font color ="#0000FF">*    ENDLOOP.</font>
+
+  "070 테이블 flag 업데이트
+  DATA ls_flag TYPE zca_sdt080.
+
+  "갱신할 대상의 sales_no 먼저 조회
+  SELECT SINGLE a~vbeln, a~seqno
+    FROM zca_sdt080 AS a
+    INNER JOIN zca_sdt100 AS b
+      ON a~sales_no = b~sales_no
+    INTO CORRESPONDING FIELDS OF @ls_flag
+    WHERE b~outnum = @gv_outnum.
+
+  " 키 값으로 UPDATE 실행
+  IF sy-subrc = 0.
+    UPDATE zca_sdt070 "
+     SET status4 = 'X'
+     WHERE vbeln = @ls_flag-vbeln
+     AND seqno = @ls_flag-seqno.
+  ENDIF.
+
+
+
+
+<font color ="#0000FF">*  DATA gt_move TYPE TABLE OF zca_sdv040.</font>
+<font color ="#0000FF">*  DATA gt_move TYPE zca_sdv040.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  SELECT salensno charg matnr werks lgort btqty meins</font>
+<font color ="#0000FF">*    FROM zca_sdv040</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE gt_move</font>
+<font color ="#0000FF">*    WHERE werks = 'P002'</font>
+<font color ="#0000FF">*    and spras = sy-langu.</font>
+
+<font color ="#0000FF">*    LOOP AT gt_move into gs_move.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+
+
+<font color ="#0000FF">*  LOOP AT lt_sdt090 INTO ls_sdt090.</font>
+<font color ="#0000FF">*    LOOP AT gt_wa_130 INTO gs_wa_130.</font>
+<font color ="#0000FF">*      IF ls_sdt090-matnr EQ gs_wa_130-matnr.</font>
+<font color ="#0000FF">*        IF ls_sdt090-deliv_qty &gt; gs_wa_130-btqty.</font>
+<font color ="#0000FF">*          DATA(lv_lfqty) = ls_sdt090-deliv_qty - gs_wa_130-btqty.</font>
+<font color ="#0000FF">*          ls_sdt110-mandt     = sy-mandt.</font>
+<font color ="#0000FF">*          ls_sdt110-outnum    = gv_outnum.         " 출고문서번호</font>
+<font color ="#0000FF">*          ls_sdt110-vposn     = ls_sdt090-vposn.    " 항목 번호</font>
+<font color ="#0000FF">*          ls_sdt110-matnr     = ls_sdt090-matnr.    " 자재코드</font>
+<font color ="#0000FF">*          ls_sdt110-werks    = ls_wh-werks.           "플랜트 id</font>
+<font color ="#0000FF">*          ls_sdt110-lgort     = ls_wh-lgort.             " 창고코드</font>
+<font color ="#0000FF">*          ls_sdt110-charg     = gs_wa_130-charg.                " 배치코드 (필요 시 조정)</font>
+<font color ="#0000FF">*          ls_sdt110-lfqty     = lv_lfqty." 출고수량</font>
+<font color ="#0000FF">*          ls_sdt110-meins     = ls_sdt090-meins.    " 단위</font>
+<font color ="#0000FF">*          ls_sdt110-ernam   = sy-uname.            " 생성자</font>
+<font color ="#0000FF">*          ls_sdt110-erdat   = sy-datum.            " 생성일자</font>
+<font color ="#0000FF">*          ls_sdt110-erzet   = sy-uzeit.            " 생성시간</font>
+<font color ="#0000FF">*          ls_sdt110-aenam   = ''.                  " 수정자 (초기엔 공백)</font>
+<font color ="#0000FF">*          ls_sdt110-aedat   = ''.                  " 수정일자 (초기엔 공백)</font>
+<font color ="#0000FF">*          ls_sdt110-aezet   = ''.                  " 수정시간 (초기엔 공백)</font>
+<font color ="#0000FF">*          INSERT zca_sdt110 FROM ls_sdt110.</font>
+<font color ="#0000FF">*        ELSE.</font>
+<font color ="#0000FF">*          ls_sdt110-mandt     = sy-mandt.</font>
+<font color ="#0000FF">*          ls_sdt110-outnum    = gv_outnum.         " 출고문서번호</font>
+<font color ="#0000FF">*          ls_sdt110-vposn     = ls_sdt090-vposn.    " 항목 번호</font>
+<font color ="#0000FF">*          ls_sdt110-matnr     = ls_sdt090-matnr.    " 자재코드</font>
+<font color ="#0000FF">*          ls_sdt110-werks    = ls_wh-werks.           "플랜트 id</font>
+<font color ="#0000FF">*          ls_sdt110-lgort     = ls_wh-lgort.             " 창고코드</font>
+<font color ="#0000FF">*          ls_sdt110-charg     = gs_wa_130-charg.                " 배치코드 (필요 시 조정)</font>
+<font color ="#0000FF">*          ls_sdt110-lfqty     = ls_sdt090-deliv_qty.  " 출고수량</font>
+<font color ="#0000FF">*          ls_sdt110-meins     = ls_sdt090-meins.    " 단위</font>
+<font color ="#0000FF">*          ls_sdt110-ernam   = sy-uname.            " 생성자</font>
+<font color ="#0000FF">*          ls_sdt110-erdat   = sy-datum.            " 생성일자</font>
+<font color ="#0000FF">*          ls_sdt110-erzet   = sy-uzeit.            " 생성시간</font>
+<font color ="#0000FF">*          ls_sdt110-aenam   = ''.                  " 수정자 (초기엔 공백)</font>
+<font color ="#0000FF">*          ls_sdt110-aedat   = ''.                  " 수정일자 (초기엔 공백)</font>
+<font color ="#0000FF">*          ls_sdt110-aezet   = ''.                  " 수정시간 (초기엔 공백)</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_new_address</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; LV_OLD_ADDR</font>
+<font color ="#0000FF">*&      &lt;-- LS_ROW_BPADRR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_new_address  USING    p_lv_old_addr
+                      CHANGING p_ls_row_bpadrr.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_icon_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_icon_0130 .
+  "자재별 저장된 재고량
+  SELECT matnr, SUM( btqty ) AS btqty
+    INTO TABLE @DATA(lt_stock)
+    FROM zca_sd_cdsv_040
+    WHERE salesno = @gs_row-sales_no
+    AND spras EQ '3'
+    AND werks EQ 'P001' "왜 지우지
+<font color ="#0000FF">*    AND lvorm &lt;&gt; 'X'</font>
+    GROUP BY matnr.
+
+  "판매오더의 자재별 재고 요청 개수
+<font color ="#0000FF">*  SELECT matnr, delivqty</font>
+<font color ="#0000FF">*    INTO TABLE @DATA(lt_deliv)</font>
+<font color ="#0000FF">*    FROM zca_sd_cdsv_040</font>
+<font color ="#0000FF">*    WHERE salesno = @ls_row-sales_no</font>
+<font color ="#0000FF">*    GROUP BY matnr, delivqty.</font>
+  SELECT matnr, delivqty
+    INTO TABLE @DATA(lt_deliv)
+    FROM zca_sd_cdsv_040
+    WHERE salesno = @gs_row-sales_no
+    AND spras EQ '3'.
+<font color ="#0000FF">*     AND werks EQ 'P001'. "왜??</font>
+<font color ="#0000FF">*     AND lvorm &lt;&gt; 'X'.</font>
+<font color ="#0000FF">*    GROUP BY matnr.</font>
+
+  LOOP AT lt_stock INTO DATA(ls_stock).
+    READ TABLE lt_deliv INTO DATA(ls_deliv)
+      WITH KEY matnr = ls_stock-matnr. "ls_stcok-matnr에서 찾은 값만 찾아서 ls_deliv 넣어줌.
+
+    IF sy-subrc = 0.
+      IF ls_stock-btqty &gt;= ls_deliv-delivqty.
+        "초록색 처리
+        gs_mat-icon = '@5B@'.
+      ELSE.
+        " 빨간색 처리
+        gs_mat-icon = '@5C@'.
+      ENDIF.
+      MODIFY gt_mat FROM gs_mat TRANSPORTING icon WHERE matnr = ls_stock-matnr.
+    ENDIF.
+  ENDLOOP.
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_tree</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_tree .
+
+  CREATE OBJECT go_tree_con
+    EXPORTING
+      container_name = 'CCON_TREE'.                " Name of the Screen CustCtrl Name to Link Container To
+  CREATE OBJECT go_tree
+    EXPORTING
+      parent              = go_tree_con               " Parent Container
+      node_selection_mode = cl_gui_simple_tree=&gt;node_sel_mode_single. "하나의 노드만 선택 가능
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_node</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_node .
+<font color ="#0000FF">*  SELECT * FROM zca_sdv050</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE gt_treenode</font>
+<font color ="#0000FF">*    WHERE status4 = ' '.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 납기일 유일값만 뽑기</font>
+<font color ="#0000FF">*data(lt_vdatu) = gt_treenode.</font>
+<font color ="#0000FF">*  SORT lt_vdatu BY vdatu.</font>
+<font color ="#0000FF">*  DELETE ADJACENT DUPLICATES FROM lt_vdatu COMPARING vdatu.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA(lt_treenode) = gt_treenode.</font>
+<font color ="#0000FF">*  SORT gt_treenode BY sales_no.</font>
+<font color ="#0000FF">*  SORT lt_treenode BY sales_no. "delete adjacent~ 사용하기 위해서는 정렬 필요</font>
+<font color ="#0000FF">*  DELETE ADJACENT DUPLICATES FROM lt_treenode COMPARING sales_no. "sales_no을 기준으로 인접한 값 중복 제거</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: node LIKE mtreesnode. " 트리 노드에 필요한 변수</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR node.</font>
+<font color ="#0000FF">*  node-node_key = 'ROOT'.</font>
+<font color ="#0000FF">*  node-isfolder = 'X'.</font>
+<font color ="#0000FF">*  node-text = '납기요청일'.</font>
+<font color ="#0000FF">*  APPEND node TO node_table.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  "두번째 노드 ( 납기일 )</font>
+<font color ="#0000FF">*  LOOP AT lt_treenode INTO DATA(ls_treenode).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    CLEAR node.</font>
+<font color ="#0000FF">*    node-node_key = ls_treenode-sales_no.</font>
+<font color ="#0000FF">*    node-relatkey = 'ROOT'.</font>
+<font color ="#0000FF">*    node-isfolder = 'X'.</font>
+<font color ="#0000FF">*    node-text = ls_treenode-vdatu.</font>
+<font color ="#0000FF">*    node-expander = 'X'.</font>
+<font color ="#0000FF">*    APPEND node TO node_table.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    "세번째 노드 ( 자재코드,명)</font>
+<font color ="#0000FF">*    LOOP AT gt_treenode INTO DATA(gs_treenode)</font>
+<font color ="#0000FF">*      WHERE sales_no = ls_treenode-sales_no.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      CLEAR node.</font>
+<font color ="#0000FF">*      IF strlen( gs_treenode-sales_no ) &gt;= 10 AND strlen( gs_treenode-matnr ) &gt;= 8.</font>
+<font color ="#0000FF">*        node-node_key = |{ gs_treenode-sales_no+3(7) }{ gs_treenode-matnr+3(5) }|.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*      node-relatkey = ls_treenode-sales_no.</font>
+<font color ="#0000FF">**        node-isfolder = 'X'.</font>
+<font color ="#0000FF">*      node-text = gs_treenode-matnr.</font>
+<font color ="#0000FF">*      node-expander = 'X'.</font>
+<font color ="#0000FF">*      APPEND node TO node_table.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+<font color ="#0000FF">*  SELECT matnr FROM zca_sdt090</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE gt_treenode.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CALL METHOD go_tree-&gt;add_nodes</font>
+<font color ="#0000FF">*    EXPORTING</font>
+<font color ="#0000FF">*      table_structure_name = 'MTREESNODE'              " Name of Structure of Node Table</font>
+<font color ="#0000FF">*      node_table           = node_table.              " Node table</font>
+
+<font color ="#0000FF">*DATA: lv_date_from TYPE sy-datum,</font>
+<font color ="#0000FF">*      lv_date_to   TYPE sy-datum.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*lv_date_from = sy-datum.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*IF p_today = 'X'.</font>
+<font color ="#0000FF">*  lv_date_to = sy-datum.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*ELSEIF p_7days = 'X'.</font>
+<font color ="#0000FF">*  lv_date_to = sy-datum + 7.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*ELSEIF p_all = 'X'.</font>
+<font color ="#0000FF">*  lv_date_to = '99991231'. " 사실상 무제한</font>
+<font color ="#0000FF">*ENDIF.</font>
+
+  SELECT * FROM zca_sdv050
+    INTO CORRESPONDING FIELDS OF TABLE @gt_treenode
+    WHERE status4 &lt;&gt; 'X'
+    AND status9 = 'A' .
+<font color ="#0000FF">*     AND vdatu BETWEEN @lv_date_from AND @lv_date_to. " 추가</font>
+
+<font color ="#0000FF">* 납기일 유일값만 뽑기</font>
+  DATA(lt_vdatu) = gt_treenode.
+  SORT lt_vdatu BY vdatu.
+  DELETE ADJACENT DUPLICATES FROM lt_vdatu COMPARING vdatu.
+
+<font color ="#0000FF">* 트리 루트 노드</font>
+  DATA: node     LIKE mtreesnode,
+        lt_sales TYPE STANDARD TABLE OF zca_sdv050,
+        lt_mat   TYPE STANDARD TABLE OF zca_sdv050,
+        ls_node  TYPE mtreesnode.
+
+  REFRESH node_table. "이거 해줘야지 에러안남.(리프레시시 이거 필요)
+
+  CLEAR node.
+  node-node_key = 'ROOT'. " 노드의 고유 키값
+  node-isfolder = 'X'. "폴더 아이콘 표시 (확장 가능한 노드)
+  node-text = '납기요청일'.
+  APPEND node TO node_table. "" 전체 노드 테이블에 루트 노드 추가
+
+<font color ="#0000FF">*  DATA(lv_date_text) = |{ ls_treenode-vdatu+0(4) }-{ ls_treenode-vdatu+4(2) }-{ ls_treenode-vdatu+6(2) }|.</font>
+<font color ="#0000FF">*  node-text = lv_date_text.</font>
+  DATA lv_count TYPE i.
+
+<font color ="#0000FF">* 2차 노드 - 납기일</font>
+  LOOP AT lt_vdatu INTO DATA(ls_vdatu). " 유일한 납기일(vdatu) 하나씩 처리
+
+
+<font color ="#0000FF">* " 이 납기일에 해당하는 판매오더 수 계산</font>
+    "판매오더 개수 초기화
+    CLEAR lv_count.
+    " gt_treenode에서 현재 납기일(vdatu)이 같은 데이터만 추출
+    " 이때 자재코드(matnr)와 상관없이 전체 레코드가 복사됨
+    lt_sales = VALUE #( FOR wa IN gt_treenode WHERE ( vdatu = ls_vdatu-vdatu ) " 현재 납기일 기준 필터링
+                        ( wa ) ).  " 구조 그대로 wa 한 줄씩 추가
+    " 판매오더 번호 기준으로 정렬
+    " 그래야 중복 제거가 제대로 동작함
+    SORT lt_sales BY sales_no.
+
+    " 판매오더 번호가 같은 항목은 중복 제거
+    " 동일한 판매오더가 자재별로 여러 줄 있어도 하나로 인식됨
+    DELETE ADJACENT DUPLICATES FROM lt_sales COMPARING sales_no.
+
+    lv_count = lines( lt_sales ). "납기일별 판매오더 개수
+
+    DATA(lv_date_text) = |{ ls_vdatu-vdatu+0(4) }-{ ls_vdatu-vdatu+4(2) }-{ ls_vdatu-vdatu+6(2) }({ lv_count }건)|.
+    CLEAR node.
+    node-node_key = ls_vdatu-vdatu.
+    node-relatkey = 'ROOT'.
+    node-isfolder = 'X'.
+    node-text = lv_date_text.
+    node-expander = 'X'.   " 기본 확장 가능 상태
+    APPEND node TO node_table.
+
+<font color ="#0000FF">* 3차 노드 - 판매오더번호</font>
+    lt_sales = VALUE #( FOR wa IN gt_treenode WHERE ( vdatu = ls_vdatu-vdatu )
+                        ( wa ) ).
+    SORT lt_sales BY sales_no.
+    DELETE ADJACENT DUPLICATES FROM lt_sales COMPARING sales_no.
+
+    LOOP AT lt_sales INTO DATA(ls_sales).
+      CLEAR node.
+      node-node_key = ls_sales-sales_no.   " 판매오더 번호가 노드 키
+      node-relatkey = ls_vdatu-vdatu.     " 상위는 납기일
+      node-isfolder = 'X'.                 " 폴더 아이콘처럼 보임
+      node-text = ls_sales-sales_no.
+      node-expander = 'X'.                  " 펼칠 수 있다.
+      APPEND node TO node_table.
+
+<font color ="#0000FF">* 4차 노드 - 자재코드</font>
+      LOOP AT gt_treenode INTO DATA(ls_item)
+           WHERE sales_no = ls_sales-sales_no AND vdatu = ls_vdatu-vdatu.
+
+        CLEAR node.
+        node-node_key = |{ ls_item-sales_no+3(7) }{ ls_item-matnr+3(5) }|.
+        node-relatkey = ls_sales-sales_no.
+        node-text = ls_item-matnr.
+        node-expander = ''.                      " 펼칠 수 없다.
+        APPEND node TO node_table.
+      ENDLOOP. " 자재코드 반복
+
+    ENDLOOP.    " 판매오더 반복
+
+  ENDLOOP.      " 납기일 반복
+
+
+  " 노드 테이블을 실제 트리 객체에 적용
+  CALL METHOD go_tree-&gt;add_nodes
+    EXPORTING
+      table_structure_name = 'MTREESNODE'             " 구조체 이름 반드시 지정
+      node_table           = node_table.              " Node table
+
+  "ROOT인 노드를 기본으로 펼쳐두기
+  CALL METHOD go_tree-&gt;expand_node
+    EXPORTING
+      node_key = 'ROOT'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form init_tree</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM init_tree .
+<font color ="#0000FF">*  IF go_tree IS INITIAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    PERFORM create_tree.</font>
+<font color ="#0000FF">*    PERFORM make_node.</font>
+<font color ="#0000FF">*    PERFORM event_handeler.                     " 더블클릭 이벤트 등록</font>
+<font color ="#0000FF">*  ENDIF.</font>
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_node_click</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_node_click  USING    p_node_key.
+  gv_view_mode = 'D'.
+  gv_selected_node = p_node_key.
+
+  CASE p_node_key.
+    WHEN 'ROOT'.
+      " 모든 데이터 SELECT
+      SELECT a~sales_no,
+          a~vbeln,
+          a~seqno,
+          a~cuscode,
+         a~vdatu,
+         a~netwr,
+         a~waers,
+         a~status10,
+         a~bpadrr,
+         b~status11
+     FROM zca_sdt080 AS a
+     LEFT OUTER JOIN zca_sdt180 AS b
+     ON a~sales_no = b~sales_no
+         INTO CORRESPONDING FIELDS OF TABLE @gt_sale
+         WHERE status4 = ' ' "출고 안됨
+         AND status9 = 'A'.  "여신점검 통과
+
+    WHEN OTHERS.
+      IF strlen( p_node_key ) = 8.
+        " 납기일로 필터
+        SELECT a~sales_no,
+        a~vbeln,
+        a~seqno,
+        a~cuscode,
+        a~vdatu,
+        a~netwr,
+        a~waers,
+        a~status10,
+        a~bpadrr,
+        b~status11
+        FROM zca_sdt080 AS a
+        LEFT OUTER JOIN zca_sdt180 AS b
+        ON a~sales_no = b~sales_no
+         INTO CORRESPONDING FIELDS OF TABLE @gt_sale
+<font color ="#0000FF">*         WHERE vdatu = @p_node_key</font>
+         WHERE vdatu = @gv_selected_node
+
+         AND status4 &lt;&gt; 'X'.                           " 출고 안 된 건만
+
+      ELSEIF strlen( p_node_key ) = 10.
+        " 판매오더로 필터
+        SELECT a~sales_no,
+          a~vbeln,
+          a~seqno,
+          a~cuscode,
+         a~vdatu,
+         a~netwr,
+         a~waers,
+         a~status10,
+         a~bpadrr,
+         b~status11
+       FROM zca_sdt080 AS a
+       LEFT OUTER JOIN zca_sdt180 AS b
+       ON a~sales_no = b~sales_no
+         INTO CORRESPONDING FIELDS OF TABLE @gt_sale
+<font color ="#0000FF">*         WHERE a~sales_no = @p_node_key</font>
+         WHERE a~sales_no = @gv_selected_node
+          AND status4 &lt;&gt; 'X'.
+      ENDIF.
+  ENDCASE.
+
+  LOOP AT gt_sale INTO gs_sale.
+    IF gs_sale-status10 = 'X'.
+      gs_sale-icon_status10 = icon_checked.
+    ELSE.
+      gs_sale-icon_status10 = icon_incomplete.
+    ENDIF.
+    IF gs_sale-status11 = 'X'.
+      gs_sale-icon_status11 = icon_checked.
+    ELSE.
+      gs_sale-icon_status11 = icon_incomplete.
+    ENDIF.
+
+    call function <a href ="zca_pp_complete_flag/zca_pp_complete_flag.html">'ZCA_PP_COMPLETE_FLAG'</a>
+      EXPORTING
+        iv_date = gs_sale-vdatu                 " Field of type DATS
+      IMPORTING
+        ev_flag = gv_flag.                 " ' ' = 생산 미완료 / 'X' = 생산 완료
+
+    IF gv_flag EQ abap_on.
+<font color ="#0000FF">*      gs_sale-icon_comp = ABAP_ON.</font>
+      gs_sale-icon_comp = icon_checked.
+    ELSE.
+      gs_sale-icon_comp = icon_incomplete.
+    ENDIF.
+
+    CLEAR gv_flag.
+
+    MODIFY gt_sale FROM gs_sale.
+  ENDLOOP.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form change_wh</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM change_wh  USING pv_answer TYPE c.
+  " 추천 플랜트와 다를 때 팝업 띄우기
+  IF cargo2 NE gv_pname.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar       = '물류센터 변경 확인'
+        text_question  = |현재 선택한 '{ cargo2 }'는 거리 기반 최적 물류센터가 아닙니다. 변경하시겠습니까?|
+        text_button_1  = '예'
+        text_button_2  = '아니오'
+        default_button = '2'
+      IMPORTING
+        answer         = pv_answer.
+
+    IF pv_answer = '1'.  " 예
+      "선택한 값 그대로 유지
+
+
+    ELSEIF pv_answer = '2'.  " 아니오
+      " 추천값으로 복귀
+      cargo2 = gv_pname.
+    ENDIF.
+
+    CALL FUNCTION 'VRM_SET_VALUES'
+      EXPORTING
+        id     = 'CARGO2' "드롭다운 이름
+        values = lt_box.  "보여줄 옵션 목록
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form event_handeler</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM event_handeler .
+  CREATE OBJECT go_tree_event. "
+
+  event-eventid = cl_gui_simple_tree=&gt;eventid_node_double_click. " 더블클릭 이벤트 등록
+  event-appl_event = 'X'.
+  APPEND event TO events.
+
+<font color ="#0000FF">* 이벤트 등록</font>
+  CALL METHOD go_tree-&gt;set_registered_events
+    EXPORTING
+      events                    = events
+    EXCEPTIONS
+      cntl_error                = 1
+      cntl_system_error         = 2
+      illegal_event_combination = 3.
+
+<font color ="#0000FF">*이벤트 핸들러 등록</font>
+  SET HANDLER go_tree_event-&gt;tree_double_click FOR go_tree.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_shipping_req</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM req_move_mat.
+  DATA: lt_outnum_row TYPE lvc_t_row,
+        ls_outnum_row TYPE lvc_s_row.
+
+<font color ="#0000FF">* 선택한 줄 가져오기</font>
+  CALL METHOD go_alv_0110-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = lt_outnum_row.
+
+<font color ="#0000FF">* 선택한 줄이 없으면 메시지</font>
+  IF lt_outnum_row IS INITIAL.
+    MESSAGE s305 DISPLAY LIKE 'E'. "선택한 행이 없습니다.
+    RETURN.
+  ENDIF.
+
+  READ TABLE lt_outnum_row INTO ls_outnum_row INDEX 1.
+  IF sy-subrc = 0.
+    READ TABLE gt_sale INTO gs_sale INDEX ls_outnum_row-index.
+    IF sy-subrc = 0.
+      IF gs_sale-icon_comp NE abap_on.
+        MESSAGE '해당 오더는 아직 생산이 완료되지 않았습니다.' TYPE 'S' DISPLAY LIKE 'E'.
+        RETURN.
+      ENDIF.
+
+      gv_sel_salesno = gs_sale-sales_no. " 선택한 판매오더번호 저장
+
+      "선택한 행에 대해 이미 재고 이전을 신청한 경우, 재고가 부족한 경우 제어
+      SELECT SINGLE status10
+       FROM zca_sdt080
+       INTO @DATA(lv_status10)
+       WHERE sales_no = @gv_sel_salesno.
+      IF lv_status10 = 'X'.
+        MESSAGE s314 DISPLAY LIKE 'E'. "이미 재고 이전 요청을 한 판매오더입니다.
+        RETURN. "현재 PERFROM문 조기 종료
+      ENDIF.
+
+      IF gs_sale-icon EQ '@5B@'. " ICON이 초록색
+
+        MESSAGE s306 WITH gv_sel_salesno.  "판매오더 & 재고 이전을 요청합니다.
+        "배송지와 가까운 물류센터로 배치
+        PERFORM recommend_wh USING gv_sel_salesno.
+
+
+        "150번 스크린 정보 채우기
+<font color ="#0000FF">*      PERFORM set_info_150 USING gv_sel_salesno.</font>
+        PERFORM set_info_0130 USING gv_sel_salesno.
+
+        CALL SCREEN 150 STARTING AT 25 3 ENDING AT 156 15.
+      ELSE.
+        MESSAGE s307 DISPLAY LIKE 'E'. "이전할 재고가 충분하지 않습니다.
+        RETURN.
+      ENDIF.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form con_ship_req</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM update_t180  USING pv_sel_salesno TYPE zca_sdt100-sales_no .
+
+  "재고이전 FLAG 'X'로 변경
+  UPDATE zca_sdt080
+  SET status10 = 'X'
+  WHERE sales_no EQ pv_sel_salesno.
+
+  DATA lv_reqnum TYPE zca_sdt180-ship_req_no.
+
+  "재고이전요청번호 채번
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '01'                " Number range number
+      object      = 'ZCA_OUT7'                " Name of number range object
+    IMPORTING
+      number      = lv_reqnum                 " free number
+    EXCEPTIONS
+      OTHERS      = 1.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE s313 DISPLAY LIKE 'E'. "재고 이전 요청 번호 생성 실패
+    RETURN.
+  ENDIF.
+  lv_reqnum = |OUT{ lv_reqnum }R|.
+
+  "zca_sdt180  데이터 넣기
+  DATA lv_ship_r TYPE zca_sdt180.
+  DATA: lv_werks TYPE zca_werks,
+        lv_lgort TYPE zca_lgort.
+
+  SELECT SINGLE werks, lgort
+    INTO (@lv_werks, @lv_lgort)
+    FROM zca_mmv120
+    WHERE pname = @cargo2.
+
+  lv_ship_r-ship_req_no = lv_reqnum.
+  lv_ship_r-sales_no = gv_sel_salesno.
+  lv_ship_r-werks = lv_werks.
+  lv_ship_r-lgort = lv_lgort.
+
+  INSERT zca_sdt180 FROM lv_ship_r.
+
+  "데이터 다시 가져오기(아이콘 즉시 반영)
+  PERFORM select_sale_data.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_info_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; LS_ROW_SALES_NO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_info_0130  USING    ps_row_sales_no.
+  "130번 화면 재고 관련 INFO
+  DATA: lv_has_halv    TYPE abap_bool, "완제품 존재 여부
+        lv_has_fert    TYPE abap_bool, "반제품 존재 여부
+        lv_total_btqty TYPE zca_sd_cdsv_040-btqty.
+
+  CLEAR: lv_total_btqty,
+    lv_has_fert,
+    lv_has_halv,
+    lgort130,
+    lgobe130,
+    lgort130_2,
+    lgobe130_2.
+
+  lv_has_halv = abap_false.
+  lv_has_fert = abap_false.
+
+  SELECT  salesno,
+          delivdate,
+          matnr,
+          mattype,
+          btqty,
+    charg
+    FROM ZCA_sd_cdsv_040
+    INTO CORRESPONDING FIELDS OF TABLE @gt_info_130
+     WHERE salesno = @ps_row_sales_no
+     AND werks = 'P001'
+    AND mattype &lt;&gt; 'ROH'.
+
+  " 자재 유형 확인 및 수량 합산
+  LOOP AT gt_info_130 INTO gs_info_130.
+    lv_total_btqty += gs_info_130-btqty.
+  ENDLOOP.
+  LOOP AT gt_info_130 INTO gs_info_130.
+    CASE gs_info_130-mattype.
+      WHEN 'FERT'. "제품
+        lv_has_fert = abap_true.
+      WHEN 'HALB'. "반제품
+        lv_has_halv = abap_true.
+    ENDCASE.
+  ENDLOOP.
+
+  " 창고정보 설정
+<font color ="#0000FF">*  IF lv_total_btqty &gt; 0.</font>
+  werks130 = 'P001'.
+  pname130 = '생산공장'.
+  IF lv_has_fert = abap_true AND lv_has_halv = abap_true.
+    lgort130 = 'SL01'.
+    lgobe130 = '제품창고'.
+    lgort130_2 = 'SL02'.
+    lgobe130_2 = '반제품창고'.
+  ELSEIF lv_has_fert = abap_true.
+    lgort130 = 'SL01'.
+    lgobe130 = '제품창고'.
+  ELSEIF lv_has_halv = abap_true.
+    lgort130 = 'SL02'.
+    lgobe130 = '반제품창고'.
+  ENDIF.
+<font color ="#0000FF">*  ELSE. " 수량 0이면 초기화</font>
+<font color ="#0000FF">*    CLEAR: werks130, lgort130, lgobe130, lgort130_2, lgobe130_2.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+  zca_sdt080-sales_no = ps_row_sales_no.
+  zca_sdt080-vdatu = gs_info_130-delivdate.
+
+  "150번 화면
+<font color ="#0000FF">*  SELECT SINGLE a~lgort, a~werks, b~lgobe, b~pname</font>
+<font color ="#0000FF">*    FROM zca_sdt180 AS a "자재이동테이블</font>
+<font color ="#0000FF">*    INNER JOIN zca_sdt160 AS b "물류센터배치테이블</font>
+<font color ="#0000FF">*    ON a~lgort = b~lgort</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF @gs_info</font>
+<font color ="#0000FF">*    WHERE sales_no = @ps_row_sales_no.</font>
+<font color ="#0000FF">*  WERKS150 = gs_info-werks.</font>
+<font color ="#0000FF">*  LGORT150 = gs_info-lgort.</font>
+<font color ="#0000FF">*  lgobe150 = gs_info-lgobe.</font>
+<font color ="#0000FF">*  cargo2 = gs_info-pname.</font>
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_info_150</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_info_0150 USING pv_sales_no.
+  SELECT SINGLE kunnr,
+      name1,
+      bpcsnr,
+      bphaed,
+      bpadrr,
+      zemail
+  FROM zca_sd_cdsv_020
+  INTO CORRESPONDING FIELDS OF @gs_info
+  WHERE salesno = @pv_sales_no.
+
+  zca_kna1-kunnr = gs_info-kunnr.
+  zca_kna1-name1 = gs_info-name1.
+  zca_kna1-bpcsnr = gs_info-bpcsnr.
+  zca_kna1-bphaed = gs_info-bphaed.
+  zca_kna1-bpadrr = gs_info-bpadrr.
+  zca_kna1-zemail = gs_info-zemail.
+  addr = gs_info-bpadrr.
+
+  SELECT SINGLE lgort, werks, lgobe, pname
+  FROM zca_sdt160    "물류센터배치테이블
+  INTO CORRESPONDING FIELDS OF @gs_info
+  WHERE pname = @cargo2.
+  werks150 = gs_info-werks.
+  lgort150 = gs_info-lgort.
+  lgobe150 = gs_info-lgobe.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_field_cat_0120_2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_field_cat_0120_2 .
+  REFRESH gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'OUTNUM'.
+  gs_field_cat_0120_2-coltext   = '출고문서번호'.
+  gs_field_cat_0120_2-key       = 'X'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'VPOSN'.
+  gs_field_cat_0120_2-coltext   = '항목번호'.
+  gs_field_cat_0120_2-key       = 'X'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'MATNR'.
+  gs_field_cat_0120_2-coltext   = '자재코드'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'MAKTX'.
+  gs_field_cat_0120_2-coltext   = '자재명'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'WERKS'.
+  gs_field_cat_0120_2-coltext   = '플랜트 ID'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'LGORT'.
+  gs_field_cat_0120_2-coltext   = '창고코드'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'LFQTY'.
+  gs_field_cat_0120_2-coltext   = '출고수량'.
+  gs_field_cat_0120_2-qfieldname = 'MEINS'. " 단위 필드 연동
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+
+  CLEAR gs_field_cat_0120_2.
+  gs_field_cat_0120_2-fieldname = 'MEINS'.
+  gs_field_cat_0120_2-coltext   = '단위'.
+  APPEND gs_field_cat_0120_2 TO gt_field_cat_0120_2.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_EVENT_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_event_0120 .
+  SET HANDLER lcl_event_handler=&gt;on_hotspot_click FOR go_alv_0120.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_tree</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_tree .
+
+  CALL METHOD go_tree-&gt;delete_all_nodes.
+  PERFORM make_node.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

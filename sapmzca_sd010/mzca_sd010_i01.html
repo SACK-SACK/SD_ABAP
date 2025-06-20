@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD010_I01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD010_I01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD010I01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0100 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'REFRESH'.
+      PERFORM refresh.
+
+<font color ="#0000FF">*      CLEAR ZCA_SDT020-DEFAULT_COUNT.</font>
+    WHEN 'SEARCH'.
+      IF my_tabstrip-activetab = 'TAB1'.
+        PERFORM select_credit_data. "검색 조건에 따라 여신을 조회를 하는 서브루틴
+      ELSEIF my_tabstrip-activetab = 'TAB2'.
+        PERFORM select_approve_data. " 승인된 여신을 조회하는 서브루틴
+      ELSE.
+        PERFORM select_reject_data. " 거절된 여신을 조회하는 서브루틴
+      ENDIF.
+      PERFORM refresh_search.
+    WHEN 'CHECK'.
+
+      PERFORM select_sale_item_data.
+
+    WHEN 'TAB1' OR 'TAB2' OR 'TAB3'. "
+      PERFORM clear_info.
+      PERFORM refresh.
+      CLEAR gs_row.
+      my_tabstrip-activetab = ok_code. " Next SCREEN(다음 화면)에 내가 지금 누른 버튼(탭)이
+      " 눌리도록 activetab 으로 설정하고,
+      " 이 activetab의 값에 의해 보여질 화면번호도 결정된다.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0110  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0110 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0140  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0140 INPUT.
+  CASE ok_code.
+    WHEN 'APPROVE'.
+      PERFORM approve_data.
+      PERFORM select_credit_data. "TAB1화면을 리프레시
+      PERFORM select_approve_data.
+      PERFORM select_reject_data .
+<font color ="#0000FF">*      CALL METHOD go_alv_tab1-&gt;refresh_table_display( ). "ALV 리프레쉬 -&gt; GT_DATA 다시 가져오기</font>
+      LEAVE TO SCREEN 0.
+
+<font color ="#0000FF">*    WHEN 'REJECT'.</font>
+<font color ="#0000FF">*      PERFORM reject_data.</font>
+<font color ="#0000FF">*      PERFORM select_credit_data.</font>
+<font color ="#0000FF">*      PERFORM select_reject_data .</font>
+<font color ="#0000FF">*      LEAVE TO SCREEN 0.</font>
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0130  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0130 INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE TO SCREEN 0.
+    WHEN 'BACK'.
+      LEAVE SCREEN.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANCEL'.
+      CALL METHOD go_alv_modal-&gt;refresh_table_display( ).
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  SELECT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+<font color ="#0000FF">*MODULE select INPUT.</font>
+<font color ="#0000FF">* DATA: lt_outnum_row TYPE lvc_t_row,</font>
+<font color ="#0000FF">*            ls_outnum_row TYPE lvc_s_row.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 선택한 줄 가져오기</font>
+<font color ="#0000FF">*      CALL METHOD go_alv_tab1-&gt;get_selected_rows</font>
+<font color ="#0000FF">*        IMPORTING</font>
+<font color ="#0000FF">*          et_index_rows = lt_outnum_row.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** 선택한 줄이 없으면 메시지</font>
+<font color ="#0000FF">*      IF lt_outnum_row IS INITIAL.</font>
+<font color ="#0000FF">**    MESSAGE '선택한 행이 없습니다.' TYPE 'S' DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*        MESSAGE s305 DISPLAY LIKE 'E'. "선택한 행이 없습니다.</font>
+<font color ="#0000FF">*        RETURN.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      READ TABLE lt_outnum_row INTO ls_outnum_row INDEX 1.</font>
+<font color ="#0000FF">*      IF sy-subrc = 0.</font>
+<font color ="#0000FF">*        READ TABLE gt_tab1 INTO gs_tab1 INDEX ls_outnum_row-index.</font>
+<font color ="#0000FF">*        IF sy-subrc = 0.</font>
+<font color ="#0000FF">*          "오른쪽 여신, 고객 정보 select</font>
+<font color ="#0000FF">*          PERFORM set_info USING gs_tab1-cuscode.</font>
+<font color ="#0000FF">**      PERFORM select_info USING gs_tab1-cuscode.</font>
+<font color ="#0000FF">*          gv_sel_salesno = gs_tab1-salesno. " 예: 선택한 판매오더 번호 가져오기</font>
+<font color ="#0000FF">**      MESSAGE |판매오더 { gv_sel_SALESNO } 여신을 점검합니다.| TYPE 'S'.</font>
+<font color ="#0000FF">*          MESSAGE s315 WITH gv_sel_salesno.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*ENDMODULE.</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

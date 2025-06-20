@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD040_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD040_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD040_PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD040_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv OUTPUT.
+  "Container 및 ALV의 중복 생성을 방지하기 위해, INITIAL일 때 한번만 작동하도록 점검한다.
+  IF go_container_h IS INITIAL .
+
+    " Container 와 ALV  객체를 생성한다.
+    PERFORM create_object USING go_container_h
+                                go_alv_grid_h
+                                'CCON1'.
+    "대금 청구 item에 대한 alv
+    PERFORM create_object USING go_container_i
+                                go_alv_grid_i
+                                'CCON2'.
+
+    " ALV Layout에 대한 설정을 한다.
+    PERFORM set_alv_layout_0110.
+
+    PERFORM set_alv_fieldcat_h.
+    PERFORM set_alv_fieldcat_i.
+
+    PERFORM set_alv_event_0110.
+
+    " ALV 화면출력을 위해 데이터를 전달한다.
+    PERFORM display_alv_h.
+    PERFORM display_alv_i.
+
+  ELSE.
+    CALL METHOD go_alv_grid_h-&gt;refresh_table_display. " 생성이 이미 완료 된 상태라면 새로고침
+    CALL METHOD go_alv_grid_i-&gt;refresh_table_display. " 생성이 이미 완료 된 상태라면 새로고침
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; GO_CONTAINER_H</font>
+<font color ="#0000FF">*&      --&gt; GO_ALV_GRID_H</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object USING    po_container_h type REF TO cl_gui_custom_container
+                            po_alv_grid_h type ref to cl_gui_alv_grid
+                            VALUE(pv_con_name).
+  CREATE OBJECT po_container_h
+   EXPORTING
+      container_name = pv_con_name.               " Name of the Screen CustCtrl Name to Link Container To
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*  MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*    WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+  ENDIF.
+
+  CREATE OBJECT po_alv_grid_h
+    EXPORTING
+      i_parent = po_container_h.                 " Parent Container
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*  MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*    WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+  ENDIF.
+
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

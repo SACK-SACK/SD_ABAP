@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_MM_MINUS_BATCH</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for function: ZCA_MM_MINUS_BATCH</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  출고할때 쓰세요</b></font>
+<hr>
+<pre width="100">
+FUNCTION zca_mm_minus_batch.
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+<font color ="#0000FF">*"*"Local Interface:</font>
+<font color ="#0000FF">*"  IMPORTING</font>
+<font color ="#0000FF">*"     REFERENCE(IV_MATNR) TYPE  ZCA_MATNR</font>
+<font color ="#0000FF">*"     REFERENCE(IV_BTQTY) TYPE  ZCA_BTQTY</font>
+<font color ="#0000FF">*"     REFERENCE(IV_WERKS) TYPE  ZCA_WERKS</font>
+<font color ="#0000FF">*"     REFERENCE(IV_LGORT) TYPE  ZCA_LGORT</font>
+<font color ="#0000FF">*"     REFERENCE(IV_BWART) TYPE  ZCA_BWART</font>
+<font color ="#0000FF">*"----------------------------------------------------------------------</font>
+
+<font color ="#0000FF">*       <a href ="global-zca_mm_minus_batch.html">Global data declarations</a></font>
+
+<font color ="#0000FF">* 사용법 : 빼낼 플랜트 창고 자재번호 수량을 적으면 배치에서 빠지고 mard table에 반영됩니다.</font>
+<font color ="#0000FF">* 자재유형쓰면 자재문서도 생성됩니다. SD : 601 -&gt; 고객한테 출고 PP : 261 -&gt; 생산오더 출고</font>
+
+  DATA: lt_mmt010 TYPE TABLE OF zca_mmt010,
+        ls_mmt010 LIKE LINE OF  lt_mmt010,
+        lv_num1   TYPE zca_btqty,           " 총수량
+        lv_num2   TYPE zca_btqty,           " 수량
+        lv_num3   TYPE zca_btqty,           " 최초 창고수량
+        lt_mard   TYPE TABLE OF zca_mard,
+        ls_mard   LIKE LINE OF  lt_mard,
+        ls_mkpf   TYPE zca_mkpf,
+        lt_mseg   TYPE TABLE OF zca_mseg,
+        ls_mseg   LIKE LINE OF  lt_mseg.
+
+<font color ="#0000FF">* 자재문서 생성 -&gt; 헤더먼저 생성</font>
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '01'               " Number range number
+      object      = 'ZCA_MBLNR'      " Name of number range object
+    IMPORTING
+      number      = ls_mkpf-mblnr.   " free number
+  ls_mkpf-mblnr = |MD{ ls_mkpf-mblnr }|.
+
+  ls_mkpf-mjahr = sy-datum(4).
+  ls_mkpf-werks = iv_werks.
+  ls_mkpf-mdart = 'WA'.
+  ls_mkpf-matnr = iv_matnr.
+  ls_mkpf-budat = sy-datum.
+  ls_mkpf-ernam = sy-uname.
+  ls_mkpf-erdat = sy-datum.
+  ls_mkpf-erzet = sy-uzeit.
+
+  INSERT zca_mkpf FROM ls_mkpf.
+
+<font color ="#0000FF">* 배치정보</font>
+  SELECT * INTO CORRESPONDING FIELDS OF TABLE lt_mmt010
+    FROM zca_mmt010
+    WHERE matnr = iv_matnr
+      AND werks = iv_werks
+      AND lgort = iv_lgort
+      AND lvorm &lt;&gt; 'X'
+    ORDER BY vfdat ASCENDING charg ASCENDING.
+
+  lv_num1 = iv_btqty.
+
+  LOOP AT lt_mmt010 INTO ls_mmt010.
+
+<font color ="#0000FF">* 자재문서</font>
+    ls_mseg-mblnr = ls_mkpf-mblnr.
+    ls_mseg-mjahr = sy-datum(4).
+    ls_mseg-matnr = iv_matnr.
+    ls_mseg-charg = ls_mmt010-charg.
+    ls_mseg-bwart = iv_bwart.
+    ls_mseg-plantfr = iv_werks.
+    ls_mseg-plantto = ''.
+    ls_mseg-meinh = ls_mmt010-unit.
+    ls_MSEG-ernam = sy-uname.
+    ls_MSEG-erdat = sy-datum.
+    ls_MSEG-erzet = sy-uzeit.
+    ls_mmt010-aenam = sy-uname.
+    ls_mmt010-aedat = sy-datum.
+    ls_mmt010-aezet = sy-uzeit.
+
+<font color ="#0000FF">* 뺼 수량 &gt; 배치 수량</font>
+    IF ls_mmt010-btqty &lt;= lv_num1.               " 수량보다 배치가 작으면 재고를 0으로 만들고 x표시
+
+      ls_mseg-menge = ls_mmt010-btqty.
+
+      lv_num2 = ls_mmt010-btqty.                 " l_num1에다가 배치수량정보 저장
+      ls_mmt010-btqty = 0.                       " 배치수량 0표시
+      ls_mmt010-lvorm = 'X'.                     " 삭제표시
+      lv_num1 -= lv_num2.                        " 배치수량만큼 총수량을 뺴준다.
+
+      UPDATE zca_mmt010 FROM ls_mmt010.          " UPDATE
+      MODIFY lt_mmt010 FROM ls_mmt010.
+      APPEND ls_mseg TO lt_mseg.
+
+<font color ="#0000FF">* 배치수량 &gt; 뺼 수량</font>
+    ELSEIF ls_mmt010-btqty &gt; lv_num1.            " 배치 수량이 총 뺴줘야 하는 수량보다 많다면
+
+      ls_mmt010-btqty -= lv_num1.                " 배치 수량에서 빼줄수량 -
+      ls_mseg-menge = lv_num1.                   " 자재문서
+
+      APPEND ls_mseg TO lt_mseg.
+      UPDATE zca_mmt010 FROM ls_mmt010.          " 창고 배치정보 업데이트
+      MODIFY lt_mmt010 FROM ls_mmt010.
+      EXIT.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  INSERT zca_mseg FROM TABLE lt_mseg.
+
+<font color ="#0000FF">* 배치정보를 mard에 갱신하는 로직</font>
+  SELECT SINGLE * INTO CORRESPONDING FIELDS OF ls_mard
+    FROM zca_mard
+    WHERE werks = iv_werks
+      AND lgort = iv_lgort
+      AND matnr = iv_matnr.
+
+  lv_num3 = ls_mard-tstock.               " 최초 mard의 자재
+  CLEAR ls_mard-labst.
+
+  LOOP AT lt_mmt010 INTO ls_mmt010.       " 배치돌면서 다 가용재고로 변환
+    IF ls_mmt010-lvorm &lt;&gt; 'X'.
+
+      ls_mard-labst += ls_mmt010-btqty.
+
+    ENDIF.
+  ENDLOOP.
+
+  ls_mard-tstock = ls_mard-labst + ls_mard-speme.   " 새로운 가용재고 하고 기존 불용재고 합쳐서 총재고로
+  ls_mard-topri = ls_mard-topri * ls_mard-tstock / lv_num3. " 가격업데이트
+  " 새로운 가격 = 기존가격 * 남은재고 / 원래재고
+  ls_mard-aenam = sy-uname.
+  ls_mard-aedat = sy-datum.
+  ls_mard-aezet = sy-uzeit.
+  UPDATE zca_mard FROM ls_mard.
+
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE '정확한 키값을 입력해주세요' TYPE 'W' DISPLAY LIKE 'I'.
+  ENDIF.
+
+ENDFUNCTION.
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   정확한 키값을 입력해주세요</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

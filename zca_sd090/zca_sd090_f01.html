@@ -1,0 +1,807 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD090_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD090_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD90_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_data .
+
+  CALL SCREEN 0100.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data .
+
+<font color ="#0000FF">* ALV에 출력을 위한 데이터 조회</font>
+
+  REFRESH gt_cont_hd.
+
+  IF pa_stat IS INITIAL. " 아직 유효한 계약만 조회하기
+
+    SELECT vbeln
+           cuscode
+           cusname
+           vbegdat
+           venddat
+           netval_sum
+           waers
+           status7
+           mail_sent_date
+           mail_sent_date2
+           mail_sent
+           mail_sent2
+      INTO CORRESPONDING FIELDS OF TABLE gt_cont_hd
+      FROM zca_sdt050
+      WHERE vbeln IN so_vbeln
+                 AND cuscode IN so_cuscd
+                  AND venddat IN so_vdat
+                  AND status7 NE 'X'
+                  AND venddat &gt;= sy-datum.
+
+
+    " 데이터 검색을 빠르게 하기 위한 정렬 조치
+    SORT gt_cont_hd BY vbeln.
+
+    MOVE-CORRESPONDING gt_cont_hd TO gt_display.
+
+  ELSE.
+
+    SELECT vbeln " 만료된 계약 조회하기
+           cuscode
+           cusname
+           vbegdat
+           venddat
+           netval_sum
+           waers
+           status7
+      INTO CORRESPONDING FIELDS OF TABLE gt_cont_hd
+  FROM zca_sdt050
+  WHERE vbeln IN so_vbeln
+             AND cuscode IN so_cuscd
+              AND venddat IN so_vdat
+              AND venddat &lt; sy-datum.
+
+    SORT gt_cont_hd BY vbeln.
+    MOVE-CORRESPONDING gt_cont_hd TO gt_display.
+
+  ENDIF.
+
+  IF pa_unsnt IS NOT INITIAL.
+
+    SELECT vbeln
+       cuscode
+       cusname
+       vbegdat
+       venddat
+       netval_sum
+       waers
+       status7
+       mail_sent_date
+       mail_sent_date2
+       mail_sent
+       mail_sent2
+  INTO CORRESPONDING FIELDS OF TABLE gt_cont_hd
+  FROM zca_sdt050
+  WHERE vbeln IN so_vbeln
+             AND cuscode IN so_cuscd
+              AND venddat IN so_vdat
+              AND status7 EQ space
+              AND mail_sent EQ space.
+
+
+    " 데이터 검색을 빠르게 하기 위한 정렬 조치
+    SORT gt_cont_hd BY vbeln.
+
+    MOVE-CORRESPONDING gt_cont_hd TO gt_display.
+
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form modify_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM modify_data .
+  LOOP AT gt_display INTO gs_display.
+
+    " 직접 입력해야 하는 필드 채워주기
+
+    " 계약 남은 일 계산해서 ITAB에 넣어주기
+    gs_display-remain_days = gs_display-venddat - sy-datum.
+
+    " Exception Column 으로 LIGHT 필드에 값 기록.
+    " 계약 만료일과 현재 달을 비교해서 LIGHT에 색깔 표시
+    IF  gs_display-remain_days &lt; 0.
+      gs_display-alter_level = '@0W@'. " 만료된 계약은 X 아이콘 표시
+
+
+    ELSEIF gs_display-remain_days &lt; 7.
+      gs_display-alter_level = '@5C@'. " 빨간색 신호등
+
+    ELSEIF gs_display-remain_days &lt;= 30.
+      gs_display-alter_level = '@5D@'. " 노란색 신호등
+
+    ELSEIF gs_display-remain_days &gt; 30.
+      gs_display-alter_level = '@5B@'. " 초록색 신호등
+
+    ENDIF.
+
+
+
+    IF gs_display-mail_sent2 EQ 'X'.
+      gs_display-sent_icon2 = '@01@'.
+    ELSEIF gs_display-mail_sent EQ 'X' AND gs_display-mail_sent2 NE 'X'.
+      gs_display-sent_icon1 = '@01@'.
+    ENDIF.
+
+
+
+    IF gs_display-mail_sent EQ 'X'.
+      gs_display-sent_icon1 = '@01@'.
+
+    ELSEIF gs_display-mail_sent EQ 'X' AND gs_display-mail_sent2 EQ 'X'.
+      gs_display-sent_icon2 = '@01@'.
+
+    ENDIF.
+
+
+
+
+
+    " 수정한 필드들의 값만 Internal table에 반영되기 위해 Transporting 에서 필드를 지정함.
+    MODIFY gt_display FROM gs_display  TRANSPORTING remain_days
+                                                    alter_level
+                                                    sent_icon1
+                                                    sent_icon2.
+
+
+  ENDLOOP.
+
+
+
+
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0100 .
+
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name = 'CCON'                 " Name of the Screen CustCtrl Name to Link Container To
+    EXCEPTIONS
+      OTHERS         = 1.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE i333 DISPLAY LIKE 'E'. " 컨테이너 생성 중 오류가 발생했습니다.
+  ENDIF.
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = go_container                " Parent Container
+    EXCEPTIONS
+      OTHERS   = 1.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE i334 DISPLAY LIKE 'E'. " ALV Object 생성 중 오류가 발생했습니다
+  ENDIF.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0100 .
+
+  gs_layout-grid_title = '계약 조회'(t01).
+  gs_layout-sel_mode = 'D'. " 복수 행 + 행 선택 컬럼 생성 + ANY 셀 선택 가능
+  gs_layout-cwidth_opt = 'X'.
+  gs_layout-zebra = 'X'.
+
+  " ALV Layout Variant 관리 및 저장을 위한 값 설정
+  gs_variant-report = sy-cprog.
+  gs_save = 'A'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0100 .
+  REFRESH gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'ALTER_LEVEL'. " 예정 만료일 상태
+  gs_field_cat-just = 'C'.
+  gs_field_cat-coltext = TEXT-f03. " 예정 만료일 단계
+  gs_field_cat-outputlen = 5.
+  gs_field_cat-col_pos = 1.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'VBELN'.
+  gs_field_cat-fieldname = 'VBELN'.  " 계약 문서 번호
+  gs_field_cat-just = 'C'.
+  gs_field_cat-key = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 2.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'CUSCODE'.
+  gs_field_cat-fieldname = 'CUSCODE'.  " 고객 코드
+  GS_fIELD_CAT-hotspot = abap_on.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 3.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'CUSNAME'.
+  gs_field_cat-fieldname = 'CUSNAME'.  " 고객명
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 4.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'VBEGDAT'.
+  gs_field_cat-fieldname = 'VBEGDAT'.   " 계약 시작일
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 5.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'VENDDAT'.
+  gs_field_cat-fieldname = 'VENDDAT'.   " 계약 종료일
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 6.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'REMAIN_DAYS'.
+  gs_field_cat-coltext = TEXT-f01. " 남은 계약 일수(F01)
+  gs_field_cat-col_pos = 7.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'NETVAL_SUM'.   " 계약 총 금액
+  gs_field_cat-fieldname = 'NETVAL_SUM'.
+  gs_field_cat-cfieldname = 'WAERS'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 8.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'WAERS'.   " 통화단위
+  gs_field_cat-fieldname = 'WAERS'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 9.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'STATUS7'.   " 계약 상태
+  gs_field_cat-fieldname = 'STATUS7'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-no_out = abap_on.
+  gs_field_cat-seltext = '계약 상태'.
+  gs_field_cat-outputlen = 10.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'MAIL_SENT'.
+  gs_field_cat-fieldname = 'MAIL_SENT'.   " 1차 메일 전송 여부
+  gs_field_cat-coltext   = '1차 메일 발송'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-no_out = abap_on.
+  gs_field_cat-checkbox = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 10.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'SENT_ICON1'.   " 1차 메일 전송 여부
+  gs_field_cat-coltext   = '1차 메일 발송'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-icon = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 11.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'MAIL_SENT_DATE'. " 1차 메일 발송 날짜
+  gs_field_cat-fieldname = 'MAIL_SENT_DATE'.
+  gs_field_cat-coltext   = '1차 발송일'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 15.
+  gs_field_cat-col_pos = 12.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'MAIL_SENT2'.
+  gs_field_cat-fieldname = 'MAIL_SENT2'.   " 2차 메일 전송 여부
+  gs_field_cat-coltext   = '2차 발송'.
+  gs_field_cat-no_out = abap_on.
+  gs_field_cat-checkbox = abap_on.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 13.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'SENT_ICON2'.   " 1차 메일 전송 여부
+  gs_field_cat-coltext   = '2차 메일 발송'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-icon = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 14.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'MAIL_SENT_DATE2'. " 2차 메일 발송 날짜
+  gs_field_cat-fieldname = 'MAIL_SENT_DATE2'.
+  gs_field_cat-coltext   = '2차 발송일'.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-outputlen = 15.
+  gs_field_cat-col_pos = 15.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0100 .
+
+  CALL METHOD go_alv_grid-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout                     = gs_layout         " Layout
+      is_variant                    = gs_variant
+      i_save                        = gs_save
+    CHANGING
+      it_outtab                     = gt_display       " Output Table
+      it_fieldcatalog               = gt_field_cat     " Field Catalog
+      it_sort                       = gt_sort                " Sort Criteria
+    EXCEPTIONS
+      invalid_parameter_combination = 1                " Wrong Parameter
+      program_error                 = 2                " Program Errors
+      too_many_lines                = 3                " Too many Rows in Ready for Input Grid
+      OTHERS                        = 4.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE i335 DISPLAY LIKE 'E'. " 화면 호출 중 오류가 발생했습니다.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_event_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_event_0100 .
+  " ALV Grid 객체의 Toolbar 이벤트에 반응하여 실행할 메소드 등록
+  SET HANDLER lcl_event_handler=&gt;on_double_click FOR go_alv_grid.
+  SET HANDLER lcl_event_handler=&gt;on_hotspot_click FOR go_alv_grid.
+  SET HANDLER lcl_event_handler=&gt;on_toolbar FOR go_alv_grid.
+  SET HANDLER lcl_event_handler=&gt;on_user_command FOR go_alv_grid.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form info_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM info_data .
+  " 내가 입력한 화면 변수 값을 GV_DAYS에 출력하기
+  gv_days = pa_days.
+
+  " 현재 검색 조건에 의해 조회된 계약 수
+  DATA(lv_cnt) = lines( gt_cont_hd ).
+  gv_total_count = lv_cnt.
+
+  " 가장 빠른 계약 종료일
+  SORT gt_display BY venddat ASCENDING.
+
+  READ TABLE gt_display INTO gs_display INDEX 1.
+
+  IF sy-subrc EQ 0.
+    DATA(lv_earliest_date) = gs_display-venddat.
+  ENDIF.
+
+  gv_earliest_end = lv_earliest_date.
+
+  " 만료일이 7일 이하인 계약 수
+
+  DATA lv_critical_count TYPE i.
+  LOOP AT gt_display INTO gs_display.
+
+    IF gs_display-remain_days &lt; 7.
+      lv_critical_count += 1.
+    ENDIF.
+
+  ENDLOOP.
+
+  gv_critical_count = lv_critical_count.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form SET_ALV_FILTER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_filter  USING pv_light. " TYPE C
+
+  DATA lt_filter TYPE lvc_t_filt.
+  DATA ls_filter LIKE LINE OF lt_filter.
+
+  IF pv_light IS NOT INITIAL.
+    CLEAR ls_filter.
+    ls_filter-fieldname = 'ALTER_LEVEL'.
+    ls_filter-sign = 'I'.
+    ls_filter-option = 'EQ'.
+    ls_filter-low = pv_light.
+    ls_filter-high = space.
+    APPEND ls_filter TO lt_filter.
+  ENDIF.
+
+  CALL METHOD go_alv_grid-&gt;set_filter_criteria
+    EXPORTING
+      it_filter = lt_filter.  " Filter Conditions
+
+  PERFORM refresh_alv_diplay.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_alv_diplay</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_alv_diplay .
+  DATA ls_stable TYPE lvc_s_stbl.
+
+  ls_stable-row = abap_on. " 현재 행 위치 유지
+  ls_stable-col = abap_on. " 현재 열 위치 유지
+
+  CALL METHOD go_alv_grid-&gt;refresh_table_display
+    EXPORTING
+      is_stable = ls_stable.               " With Stable Rows/Columns
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data_0120 .
+
+  SELECT SINGLE vbeln " 계약 문서 번호
+                cuscode " 고객 코드
+                cusname " 고객 이름
+                bpadrr " 배송지
+                totdelvnum " 예상 납품 횟수
+                netval_sum " 계약 총금액
+                waers " 통화코드
+                valdel " 납품 주기 수치값
+                valunit " 납품 주기 단위
+   INTO CORRESPONDING FIELDS OF zca_sdt050
+  FROM zca_sdt050
+  WHERE vbeln EQ gs_display-vbeln.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0130 .
+
+  CREATE OBJECT go_container_0130
+    EXPORTING
+      container_name = 'CCON'.                " Name of the Screen CustCtrl Name to Link Container
+
+  CREATE OBJECT go_alv_grid_0130
+    EXPORTING
+      i_parent = go_container_0130.                " Parent Container
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0130 .
+  gs_layout_0130-sel_mode = 'D'.
+  gs_layout_0130-zebra = abap_on.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0130 .
+  REFRESH gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0130-ref_field = 'VPOSN'.
+  gs_field_cat_0130-fieldname = 'VPOSN'.
+  gs_field_cat_0130-outputlen = 10.
+  gs_field_cat_0130-key = abap_on.
+  gs_field_cat_0130-just = 'C'.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0130-ref_field = 'MATNR'.
+  gs_field_cat_0130-fieldname = 'MATNR'.
+  gs_field_cat_0130-outputlen = 10.
+  gs_field_cat_0130-just = 'C'.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_MAKT'.
+  gs_field_cat_0130-ref_field = 'MAKTX'.
+  gs_field_cat_0130-fieldname = 'MAKTX'.
+  gs_field_cat_0130-outputlen = 8.
+  gs_field_cat_0130-just = 'L'.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0130-ref_field = 'QTY'.
+  gs_field_cat_0130-fieldname = 'QTY'.
+  gs_field_cat_0130-coltext = '계약 총수량'.
+  gs_field_cat_0130-qfieldname = 'MEINS'.
+  gs_field_cat_0130-outputlen = 10.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0130-ref_field = 'MEINS'.
+  gs_field_cat_0130-fieldname = 'MEINS'.
+  gs_field_cat_0130-outputlen = 5.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0130-ref_field = 'NETVAL'.
+  gs_field_cat_0130-fieldname = 'NETVAL'.
+  gs_field_cat_0130-cfieldname = 'WAERS'.
+  gs_field_cat_0130-outputlen = 10.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+
+  CLEAR gs_field_cat_0130 .
+  gs_field_cat_0130-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0130-ref_field = 'WAERS'.
+  gs_field_cat_0130-fieldname = 'WAERS'.
+  gs_field_cat_0130-outputlen = 5.
+  APPEND gs_field_cat_0130  TO gt_field_cat_0130 .
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0130 .
+  CALL METHOD go_alv_grid_0130-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout       = gs_layout_0130              " Layout
+    CHANGING
+      it_outtab       = gt_con_list                 " Output Table
+      it_fieldcatalog = gt_field_cat_0130.                 " Field Catalog
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data_0130 .
+  SELECT a~vposn
+                a~matnr
+                b~maktx
+                a~qty
+                a~meins
+                a~netval
+                a~waers
+           INTO CORRESPONDING FIELDS OF TABLE gt_con_list
+           FROM zca_sdt060 AS a INNER JOIN zca_makt AS b
+           ON a~matnr EQ b~matnr
+           WHERE vbeln EQ gs_display-vbeln
+           AND b~spras EQ '3'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form sent_email</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM sent_email CHANGING pv_sent_flag TYPE c.
+
+<font color ="#0000FF">*-- 메일 타이틀</font>
+  mail_title = '[푸드온보람] 계약 만료가 임박되었음을 알려드립니다.'.
+
+<font color ="#0000FF">*-- 메일 글</font>
+  wa_mailtext = '안녕하세요. 고객사 담당자님.'.
+  APPEND wa_mailtext TO t_mailtext.
+
+  CLEAR wa_mailtext.
+  wa_mailtext = '푸드온보람과 체결하신 계약이 곧 만료될 예정입니다.'.
+  APPEND wa_mailtext TO t_mailtext.
+
+  CLEAR wa_mailtext.
+  wa_mailtext = '재계약 의사가 있으시면 회신 부탁드립니다. 감사합니다.'.
+  APPEND wa_mailtext TO t_mailtext.
+
+<font color ="#0000FF">*-- 메일 제목, 글, 내용 넣기</font>
+  TRY.
+      cl_send_request = cl_bcs=&gt;create_persistent( ).
+
+      cl_document = cl_document_bcs=&gt;create_document( i_type = 'RAW'
+                                                      i_text = t_mailtext " 메일 글 넣기
+                                                      i_subject = mail_title ). " 메일 타이틀 넣기
+
+      cl_send_request-&gt;set_document( cl_document ).
+
+<font color ="#0000FF">*-- 수신자 TO 넣기</font>
+
+      LOOP AT gt_email INTO gs_email.
+        DATA(lv_email) = gs_email-zemail.
+
+        send_to = lv_email.
+
+
+      ENDLOOP.
+      cl_recipient = cl_cam_address_bcs=&gt;create_internet_address( send_to ).
+      cl_send_request-&gt;add_recipient( cl_recipient ).
+
+
+<font color ="#0000FF">*-- 발신하기</font>
+      sent = cl_send_request-&gt;send( i_with_error_screen = 'X' ).
+
+      IF sent NE abap_true.
+        pv_sent_flag = abap_true.
+      ENDIF.
+
+    CATCH cx_bcs INTO bcs_exception.
+      errortext = bcs_exception-&gt;if_message~get_text( ).
+      MESSAGE errortext TYPE 'I'.
+
+  ENDTRY.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form mail_flag</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM mail_flag .
+
+
+  LOOP AT gt_selected_rows INTO gs_selected_row.
+    READ TABLE gt_display INTO gs_display INDEX gs_selected_row-index.
+
+    IF gs_display-mail_sent IS INITIAL.
+      " GT_DISPLAY에 1차 메일 발송 여부 반영
+      LOOP AT gt_display ASSIGNING FIELD-SYMBOL(&lt;fs_row&gt;)
+        WHERE cuscode = gs_display-cuscode AND vbeln = gs_display-vbeln.
+        &lt;fs_row&gt;-mail_sent = 'X'.
+        &lt;fs_row&gt;-mail_sent_date = sy-datum.
+      ENDLOOP.
+
+
+      " DB 테이블에 1차 메일 발송 여부 반영
+      UPDATE zca_sdt050
+  SET mail_sent = 'X'
+      mail_sent_date = sy-datum
+      WHERE cuscode = gs_display-cuscode
+      AND   vbeln = gs_display-vbeln.
+      COMMIT WORK.
+    ENDIF.
+
+    IF gs_display-mail_sent IS NOT INITIAL.
+      " GT_DISPLAY에서 2차 메일 발송 여부 반영
+      LOOP AT gt_display ASSIGNING FIELD-SYMBOL(&lt;fs_row2&gt;)
+    WHERE cuscode = gs_display-cuscode AND vbeln = gs_display-vbeln.
+        &lt;fs_row2&gt;-mail_sent2 = 'X'.
+        &lt;fs_row2&gt;-mail_sent_date2 = sy-datum .
+      ENDLOOP.
+
+      " DB 테이블에 2차 메일 발송 여부 반영
+      UPDATE zca_sdt050
+  SET mail_sent2 = 'X'
+      mail_sent_date2 = sy-datum
+      WHERE cuscode = gs_display-cuscode
+      AND   vbeln = gs_display-vbeln.
+      COMMIT WORK.
+    ENDIF.
+
+    UPDATE zca_sdt050
+    SET aenam = sy-uname
+        aedat =  sy-datum
+        aezet = sy-uzeit
+      WHERE cuscode = gs_display-cuscode
+      AND   vbeln = gs_display-vbeln.
+    COMMIT WORK.
+
+  ENDLOOP.
+  PERFORM modify_data.
+
+
+  go_alv_grid-&gt;refresh_table_display( ).
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_sort_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_sort_0100 .
+  CLEAR gs_sort.
+
+  gs_sort = '1'.
+  gs_sort-fieldname = 'VBELN'.
+  gs_sort-up = 'X'.
+  APPEND gs_sort TO gt_sort.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form call_dialog_cuscode</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM call_dialog_cuscode .
+
+  DATA: lv_fname TYPE fieldname,
+        lv_value TYPE zca_sdt020-cuscode.
+  GET CURSOR FIELD lv_fname VALUE lv_value.
+
+  IF lv_fname EQ 'ZCA_SDT020-CUSCODE' AND lv_value IS INITIAL.
+    MESSAGE s363 DISPLAY LIKE 'E'. " ALV에 표시된 고객 코드를 누른 후 클릭해주세요.
+    RETURN.
+  ENDIF.
+
+  IF lv_fname EQ 'ZCA_SDT020-CUSCODE' AND lv_value IS NOT INITIAL.
+    PERFORM select_data_0140.
+
+    IF sy-subrc EQ 0.
+      CALL SCREEN 0140 STARTING AT 30 10.
+    ELSE.
+      RETURN.
+    ENDIF.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data_0140 .
+
+  SELECT SINGLE
+         kunnr, " 고객코드
+         name1, " 고객명
+         bphaed, " 대표자명
+         bpadrr, " 회사 주소
+         zemail " 이메일
+    FROM zca_kna1 INTO @DATA(gs_cus)
+    WHERE kunnr EQ @zca_sdt020-cuscode.
+
+  MOVE-CORRESPONDING gs_cus TO zca_kna1.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

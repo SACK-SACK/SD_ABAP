@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD040_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD040_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD040_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD040_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+DATA ok_code TYPE sy-ucomm.
+
+TABLES: zca_sdt120,
+        zca_kna1.
+
+DATA: go_container_h TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_h  TYPE REF TO cl_gui_alv_grid,
+      go_container_i TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_i  TYPE REF TO cl_gui_alv_grid.
+
+DATA gs_layo TYPE lvc_s_layo.
+DATA gs_fieldcat_h TYPE lvc_s_fcat.
+DATA gt_fieldcat_h TYPE lvc_t_fcat.
+DATA gs_fieldcat_i TYPE lvc_s_fcat.
+DATA gt_fieldcat_i TYPE lvc_t_fcat.
+
+DATA gt_alv1 TYPE TABLE OF zca_sdt120.
+DATA gt_alv2 TYPE TABLE OF zca_sdt130.
+DATA gs_alv2 TYPE zca_sdt130.
+
+DATA: w1 TYPE zca_waers,
+      w2 TYPE zca_waers.
+
+DATA: BEGIN OF gs_info,
+        inv_no    TYPE zca_invno,       " 청구 문서 번호
+        sales_no  TYPE zca_salesno,     " 판매 오더 번호
+        gjahr     TYPE zca_gjahr,       " 회계연도
+        budat     TYPE zca_budat,       " 전기일자
+        fkdat     TYPE zca_fkdat,       " 청구일자
+        zlsch     TYPE zca_zlsch,       " 지급조건 코드
+        cuscode   TYPE zca_cuscode,     " 고객 코드
+        werks     TYPE zca_werks,       " 플랜트 ID
+        lgort     TYPE zca_lgort,       " 창고 코드 (저장 위치)
+        bilamt    TYPE zca_bilamt,      " 청구 기준 금액(원금)
+        taxamount TYPE zca_taxamount,   " 부가 가치세
+        finalamt  TYPE zca_finalamt,    " 최종 청구 금액
+        waers     TYPE zca_waers,       " 통화코드
+        status3   TYPE zca_status3,     " 수금완료여부
+        name1     TYPE zca_cusname,     " 이름
+      END OF gs_info.
+
+
+DATA gt_inv_item TYPE TABLE OF zca_sdt130.
+
+"선택한 줄
+DATA: ls_row     TYPE zca_sdt120,
+      gv_sel_INV TYPE zca_sdt120-inv_no.
+
+
+DATA: bcs_exception        TYPE REF TO cx_bcs,
+      errortext            TYPE string,
+      cl_send_request      TYPE REF TO cl_bcs,
+      cl_document          TYPE REF TO cl_document_bcs,
+      cl_recipient         TYPE REF TO if_recipient_bcs,
+      t_attachment_header  TYPE soli_tab,
+      wa_attachment_header LIKE LINE OF t_attachment_header,
+      attachment_subject   TYPE sood-objdes,
+
+      sood_bytecount       TYPE sood-objlen,
+      mail_title           TYPE so_obj_des,
+      t_mailtext           TYPE soli_tab,
+      wa_mailtext          LIKE LINE OF t_mailtext,
+      send_to              TYPE adr6-smtp_addr,
+      sent                 TYPE abap_bool.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

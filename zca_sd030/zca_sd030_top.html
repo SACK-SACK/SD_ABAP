@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD030_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD030_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD030_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD030_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES: zca_sdt100,
+        zca_sdt120,
+        zca_sdt130.
+
+DATA ok_code TYPE sy-ucomm.
+
+<font color ="#0000FF">*----------------------------------------------</font>
+<font color ="#0000FF">* screen 100</font>
+<font color ="#0000FF">*----------------------------------------------</font>
+DATA: go_docking_container TYPE REF TO cl_gui_docking_container,
+      go_splitter_main     TYPE REF TO cl_gui_splitter_container,
+      go_splitter          TYPE REF TO cl_gui_splitter_container.
+
+DATA: go_container_l   TYPE REF TO cl_gui_container,
+      go_container_r   TYPE REF TO cl_gui_container,
+      go_container_h   TYPE REF TO cl_gui_container,
+      go_container_i   TYPE REF TO cl_gui_container, "청구서 header
+      go_container_inv TYPE REF TO cl_gui_custom_container. "청구서 상세보기
+
+DATA: go_alv_grid_h   TYPE REF TO cl_gui_alv_grid,
+      go_alv_grid_i   TYPE REF TO cl_gui_alv_grid,
+      go_alv_grid_r   TYPE REF TO cl_gui_alv_grid,
+      go_alv_grid_inv TYPE REF TO cl_gui_alv_grid. "청구서 상세보기
+"필드 카탈로그, 레아아웃, itab
+DATA: gt_fieldcat_h    TYPE lvc_t_fcat, "출고문서 heaer
+      gs_fieldcat_h    TYPE lvc_s_fcat,
+      gt_fieldcat_i    TYPE lvc_t_fcat, "출고문서 item
+      gs_fieldcat_i    TYPE lvc_s_fcat,
+      gt_fieldcat      TYPE lvc_t_fcat, "청구문서 header
+      gs_fieldcat      TYPE lvc_s_fcat,
+      gt_fieldcat_0110 TYPE lvc_t_fcat, "청구문서 ITEM
+      gs_fieldcat_0110 TYPE lvc_s_fcat,
+      gs_layo_h        TYPE lvc_s_layo,
+      gs_layo_i        TYPE lvc_s_layo,
+      gs_layo          TYPE lvc_s_layo, "청구문서 HEADER
+      gs_layout_0110   TYPE lvc_s_layo. "청구문서 ITEM
+
+"출고문서 header
+<font color ="#0000FF">*DATA: BEGIN OF gs_out_h.</font>
+<font color ="#0000FF">*        INCLUDE STRUCTURE zca_sdt100.</font>
+<font color ="#0000FF">*DATA:   icon      TYPE icon-id,</font>
+<font color ="#0000FF">*        cellcolor TYPE char4,</font>
+<font color ="#0000FF">*      END OF gs_out_h.</font>
+<font color ="#0000FF">*DATA: gt_out_h   LIKE TABLE OF gs_out_h,</font>
+TYPES: BEGIN OF ty_out_h,
+         outnum    TYPE zca_sdt100-outnum,
+         sales_no  TYPE zca_sdt100-sales_no,
+         cuscode   TYPE zca_sdt100-cuscode,
+         bpadrr    TYPE zca_sdt100-bpadrr,
+         werks     TYPE zca_sdt100-werks,
+         lgort     TYPE zca_sdt100-lgort,
+         lfdat     TYPE zca_sdt100-lfdat,
+         status4   TYPE zca_sdt100-status4,
+         status5   TYPE zca_sdt100-status5,
+         icon      TYPE icon-id,
+         cellcolor TYPE char4,
+         name1     TYPE zca_kna1-name1,
+         pname     TYPE zca_sdt160-pname,
+         ERDAT     TYPE ZCA_SDT100-erdat,
+         LGOBE     TYPE ZCA_SDT160-lgobe,
+       END OF ty_out_h.
+
+TYPES: BEGIN OF ty_invoice,
+         inv_no   TYPE zca_sdt120-inv_no,      " 청구 문서 번호
+         sales_no TYPE zca_sdt120-sales_no,    " 판매 오더 번호
+         fkdat    TYPE zca_sdt120-fkdat,       " 청구일자
+         cuscode  TYPE zca_sdt120-cuscode,     " 고객 코드
+         werks    TYPE zca_sdt120-werks,       " 플랜트
+         finalamt TYPE zca_sdt120-finalamt,    " 최종 청구 금액
+         waers    TYPE zca_sdt120-waers,       " 통화 코드
+         name1    TYPE name1,                  " 고객명 (ex: kna1-name1 등에서 조인)
+       END OF ty_invoice.
+
+       TYPES: BEGIN OF ty_outbound_data,
+         outnum   TYPE zca_outnum,     " 출고문서번호
+         vposn    TYPE zca_vposn,      " 항목번호
+         matnr    TYPE zca_matnr,      " 자재코드
+         maktx    TYPE ZCA_maktx,          " 자재명 (추가됨)
+         werks    TYPE zca_werks,      " 플랜트
+         lgort    TYPE zca_lgort,      " 창고 코드
+         lfqty    TYPE zca_lfqty,      " 출고수량
+         meins    TYPE zca_meins,      " 자재 단위
+       END OF ty_outbound_data.
+
+
+DATA: gs_out_h   TYPE ty_out_h,
+      gt_out_h   TYPE TABLE OF ty_out_h,
+      gt_out_i   TYPE TABLE OF ty_outbound_data,
+      gs_out_i   TYPE zca_sdt110,
+      gt_invoice TYPE TABLE OF ty_invoice, "생성되는 청구서
+      gs_invoice TYPE ty_invoice,
+      gt_inv_i   TYPE TABLE OF zca_sdt130, "청구서 item alv 저장
+      gs_inv_i   TYPE zca_sdt130,
+      gs_inv_h   TYPE zca_sdt120. "청구서 header info
+"variant
+DATA: gs_variant_h TYPE disvariant,   " Header ALV
+      gs_variant_i TYPE disvariant,   " Item ALV
+      gs_variant   TYPE disvariant.   " 청구서 alv
+
+"alv에서 선택한 줄
+DATA gv_sel_out TYPE zca_sdt100-outnum.
+DATA gv_prev_index LIKE gv_sel_out. "이전에 선택한 색상의 인덱스를 저장하는 변수
+DATA gv_sel_invno TYPE zca_sdt120-inv_no.
+
+"청구서 생성을 위한 타입
+<font color ="#0000FF">*TYPES: BEGIN OF ty_invoice,</font>
+<font color ="#0000FF">*         outnum   TYPE zca_sdt100-outnum,    " 출고문서번호</font>
+<font color ="#0000FF">*         sales_no TYPE zca_sdt100-sales_no,  " 판매오더번호</font>
+<font color ="#0000FF">*         cuscode  TYPE zca_sdt100-cuscode,   " 고객코드</font>
+<font color ="#0000FF">*         werks    TYPE zca_sdt100-werks,     " 플랜트</font>
+<font color ="#0000FF">*         lgort    TYPE zca_sdt100-lgort,     " 저장위치</font>
+<font color ="#0000FF">*         lfdat    TYPE zca_sdt100-lfdat,     " 청구 요청일</font>
+<font color ="#0000FF">*         netwr    TYPE zca_sdt080-netwr,     " 총 주문 금액</font>
+<font color ="#0000FF">*         waers    TYPE zca_sdt080-waers,     " 통화코드</font>
+<font color ="#0000FF">*         disval   TYPE zca_sdt080-disval,    " 할인 금액</font>
+<font color ="#0000FF">*         status3  TYPE zca_sdt080-status3,   " 수금완료여부</font>
+<font color ="#0000FF">*       END OF ty_invoice.</font>
+
+"출고율 계산
+DATA: total   TYPE i,
+      invoice TYPE i,
+      bef_inv TYPE i.
+DATA gt_count TYPE TABLE OF zca_sdt100.
+DATA gs_count TYPE zca_sdt100.
+
+DATA: wares1 TYPE zca_waers,
+      wares2 TYPE zca_waers,
+      wares3 TYPE zca_waers.
+DATA: bilamt    TYPE zca_bilamt,
+      taxamount TYPE zca_TAXAMOUNT,
+      finalamt  TYPE zca_finalamt,
+      cusname   TYPE zca_cusname.
+
+DATA gs_variant_0110 TYPE disvariant.
+gs_variant_0110-handle = '0110'.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

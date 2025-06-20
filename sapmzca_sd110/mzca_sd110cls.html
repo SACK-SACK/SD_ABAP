@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD110CLS</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD110CLS</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Class</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD110CLS</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Class (Definition) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+
+<font color ="#0000FF">*      " HOTSPOT 이벤트를 위한 Handler method</font>
+<font color ="#0000FF">*      on_hotspot_click</font>
+<font color ="#0000FF">*        FOR EVENT hotspot_click OF cl_gui_alv_grid</font>
+<font color ="#0000FF">*        IMPORTING e_row_id " 내가 클릭한 행 번호</font>
+<font color ="#0000FF">*                  e_column_id, " 내가 클릭한 열 이름</font>
+
+      " ALV 툴바에 버튼을 다루는 이벤트
+      on_toolbar
+        FOR EVENT toolbar OF cl_gui_alv_grid
+        IMPORTING e_object,
+
+      " TOOLBAR 이벤트로 만든 버튼을 클릭했을 때 작동하는 이벤트
+      on_user_command
+        FOR EVENT user_command OF cl_gui_alv_grid
+        IMPORTING e_ucomm.
+
+ENDCLASS.
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Class (Implementation) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CLASS lcl_event_handler IMPLEMENTATION.
+
+<font color ="#0000FF">*  METHOD on_hotspot_click.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF e_row_id-rowtype IS NOT INITIAL.</font>
+<font color ="#0000FF">*      MESSAGE i323 DISPLAY LIKE 'W'. " 계약문서번호만 입력해주세요.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    READ TABLE gt_display INTO gs_display INDEX e_row_id-index.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    IF sy-subrc NE 0.</font>
+<font color ="#0000FF">*      MESSAGE i324 DISPLAY LIKE 'W'. " 선택한 데이터를 찾을 수 없습니다.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    CASE e_column_id-fieldname.</font>
+<font color ="#0000FF">*      WHEN 'VBELN'.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        PERFORM select_data_0120.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        PERFORM select_data_0130.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        " 팝업으로 0110 화면 호출</font>
+<font color ="#0000FF">*        CALL SCREEN 0110 STARTING AT 30 10.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    ENDCASE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ENDMETHOD.</font>
+
+  METHOD on_toolbar.
+
+    DATA : ls_button LIKE LINE OF e_object-&gt;mt_toolbar,
+           lv_count  TYPE  i.
+
+    CLEAR ls_button.
+    ls_button-butn_type = 3.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+
+    CLEAR ls_button.
+    ls_button-function = 'FILT_ALL'.
+    ls_button-text      = |전체 ({ lines( gt_display ) })|.
+    ls_button-quickinfo = '검색 조건 초기화'.
+    ls_button-icon = icon_refresh.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR: ls_button, lv_count.
+    lv_count = REDUCE i( INIT x = 0 FOR ls_display IN gt_display
+                        WHERE ( status = '' )
+                                    NEXT x = x + 1 ).
+    ls_button-function = 'FILT_NO_APPROVAL'.
+    ls_button-text = |필터({ lv_count })|.
+    ls_button-quickinfo = '결재 승인되지 않은 문서 조회 '.
+    ls_button-icon = icon_led_red.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR: ls_button, lv_count.
+    lv_count = REDUCE i( INIT x = 0 FOR ls_display IN gt_display
+                        WHERE ( status = 'X' AND status8 = '' )
+                                    NEXT x = x + 1 ).
+    ls_button-function = 'FILT_APPROVAL'.
+    ls_button-text = |필터 ({ lv_count })|.
+    ls_button-quickinfo = '결재 승인된 문서 조회'.
+    ls_button-icon = icon_led_yellow.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR: ls_button, lv_count.
+
+    lv_count = REDUCE i( INIT x = 0 FOR ls_display IN gt_display
+                        WHERE ( status = 'X' AND status8 = 'X' )
+                                    NEXT x = x + 1 ).
+    ls_button-function = 'FILT_CREATE_SO'.
+    ls_button-text = |필터 ({ lv_count })|.
+    ls_button-quickinfo = '판매문서가 생성된 것 조회'.
+    ls_button-icon = icon_led_green.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR ls_button.
+    ls_button-butn_type = 3.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+
+  ENDMETHOD.
+
+  METHOD on_user_command.
+    CASE e_ucomm.
+
+      WHEN 'FILT_ALL'.
+        PERFORM set_alv_filter USING space.
+        gv_btn_status = ABAP_OFF.
+
+      WHEN 'FILT_CREATE_SO'.
+        PERFORM set_alv_filter USING '3'. " 결재 승인 & 판매오더 문서 생성된 것
+        gv_btn_status = ABAP_OFF.
+
+      WHEN 'FILT_APPROVAL'.
+        PERFORM set_alv_filter USING '2'. " 결재 승인만 된 것
+        gv_btn_status = ABAP_ON.
+
+      WHEN 'FILT_NO_APPROVAL'.
+        PERFORM set_alv_filter USING '1'. "  결재 승인 및 판매문서 생성도 안된 것.
+        gv_btn_status = ABAP_OFF.
+
+    ENDCASE.
+
+    leave screen.
+
+
+
+  ENDMETHOD.
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

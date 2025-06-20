@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD050_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD050_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include ZCA_SD050_TOP</font>
+<font color ="#0000FF">*&-------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 화면과 연결할 structure</font>
+TABLES zca_sdt070. " 계약 납기일정 테이블
+TABLES zca_sdt050. " 계약 HEADER 테이블
+
+<font color ="#0000FF">* 검색 조건으로 쓸 필드 선언</font>
+DATA: gv_month     TYPE c LENGTH 6, " 검색 필드에 월 리스트를 위한 변수
+      gv_cont_icon TYPE c LENGTH 4. " 계약 상태 플래그를 아이콘으로 보이기 위한 변수
+
+<font color ="#0000FF">* 검색 결과를 보관하기 위한 Work Area</font>
+DATA: BEGIN OF gs_search,
+        vbeln      TYPE zca_sdt070-vbeln, " 계약 문서 번호
+        vposn      TYPE zca_sdt070-vposn, " 항목 번호
+        seqno      TYPE zca_sdt070-seqno, " 납품 순번
+        matnr      TYPE zca_sdt070-matnr, " 자재 코드
+        maktx      TYPE zca_makt-maktx, " 자재명
+        deliv_date TYPE zca_sdt070-deliv_date, " 납품 일자
+        deliv_qty  TYPE zca_sdt070-deliv_qty, " 납품 수량
+        meins      TYPE zca_sdt070-meins, " 납품 단위
+        status     TYPE zca_sdt070-status, " 결재
+        status2    TYPE zca_sdt070-status2, " 대금청구문서 생성 여부
+        status4    TYPE zca_sdt070-status4, " 출고 여부
+        status8    TYPE zca_sdt070-status8, " 판매오더생성 여부
+      END OF gs_search,
+
+      gt_search LIKE TABLE OF gs_search. " 검색 결과를 보관할 ITAB
+
+<font color ="#0000FF">* 화면에 데이터를 출력하기 위한 Internal Table</font>
+DATA: BEGIN OF gs_display.
+        INCLUDE STRUCTURE gs_search.
+DATA:   celltab TYPE lvc_t_scol,
+        light   TYPE c LENGTH 1,
+      END OF gs_display,
+
+      gt_display LIKE TABLE OF gs_display.
+
+<font color ="#0000FF">* ok_code 변수</font>
+DATA: ok_code TYPE sy-ucomm VALUE 'RAD',
+      save_ok TYPE sy-ucomm.
+
+<font color ="#0000FF">* ALV 관련 변수</font>
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">*-- ALV 레이아웃, 정렬, 변수 저장 구조</font>
+DATA:gs_layout  TYPE lvc_s_layo,
+     gs_variant TYPE disvariant,
+     gs_sort    TYPE lvc_s_sort,
+     gt_sort    TYPE lvc_t_sort.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA: gt_field_cat TYPE lvc_t_fcat,
+      gs_field_cat TYPE lvc_s_fcat.
+
+<font color ="#0000FF">* 라디오 버튼을 위한 변수 선언</font>
+DATA: rb_all    TYPE c VALUE 'X',
+      rb_future TYPE c,
+      rb_past   TYPE c.
+
+<font color ="#0000FF">* 셀 색칠을 위한 변수 선언</font>
+DATA: gt_cellcol TYPE lvc_t_scol,
+      gs_cellcol TYPE lvc_s_scol.
+
+<font color ="#0000FF">* 현재 선택된 행의 번호를 보관하는 변수</font>
+DATA gv_current_index TYPE sy-tabix.
+
+TYPES: BEGIN OF ty_keypair, " 내가 선택한 행에 대한 계약문서 번호, 납기 순번을 한 번에 처리하기 위해 선언
+         vbeln TYPE zca_sdt070-vbeln,
+         seqno TYPE zca_sdt070-seqno,
+       END OF ty_keypair.
+
+DATA: gt_rows          TYPE lvc_t_row, " 선택된 행 목록
+      gs_row           TYPE lvc_s_row, " 단일 선택 행
+      gt_selected_keys TYPE TABLE OF ty_keypair,
+      gs_selected_key  TYPE ty_keypair, " 내가 선택한 계약문서번호, 납기 일정을 한 번에 변경시키기 위한 것.
+      gv_status7       TYPE zca_sdt050-status7, " 계약 상태 플래그
+      gv_status        TYPE zca_Sdt070-status, " 결재
+
+<font color ="#0000FF">*-- 기존에 DB에 존재하는 납기 데이터를 비교하기 위한 테이블</font>
+      BEGIN OF gs_matched,
+        vbeln   TYPE zca_sdt070-vbeln,
+        seqno   TYPE zca_sdt070-seqno,
+        status  TYPE zca_sdt070-status,
+        status8 TYPE zca_sdt070-status8,
+      END OF gs_matched,
+
+      gt_matched1 LIKE TABLE OF gs_matched,
+      gt_matched2 LIKE TABLE OF gs_matched.
+
+<font color ="#0000FF">* 납품일 변경 버튼을 눌렀을 때 결재를 받기 위한 Sturcutre</font>
+DATA: gs_approve_date TYPE zca_sdt190,
+      gt_approve_date LIKE TABLE OF gs_approve_date.
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0110번 화면</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA gv_change_date LIKE zca_sdt070-deliv_date.
+DATA: gs_change_date TYPE zca_sdt190, " ZCA_SDT190에 데이터를 넣기 위한  Structre 생성
+      gt_change_date TYPE TABLE OF zca_sdt190.
+
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0140번 화면</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*-- TABSTRIP</font>
+CONTROLS my_tabstrip TYPE TABSTRIP.
+
+<font color ="#0000FF">* TABSTRIP의 SUBSCREEN 번호를 관리하기 위한 변수</font>
+DATA dynnr TYPE sy-dynnr.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0140 화면</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*-- ALV에 출력할 변수 선언</font>
+DATA: BEGIN OF gs_con_list,
+        vposn  TYPE zca_sdt060-vposn, " 항목 번호
+        matnr  TYPE zca_sdt060-matnr, " 자재 번호
+        maktx  TYPE zca_makt-maktx, " 자재 이름
+        qty    TYPE zca_sdt060-qty, " 수량
+        meins  TYPE zca_sdt060-meins, " 단위
+        netval TYPE zca_sdt060-netval, " 계약 총금액(자재별)
+        waers  TYPE zca_sdt060-waers, " 화폐단위
+      END OF gs_con_list,
+
+      gt_con_list LIKE TABLE OF gs_con_list.
+
+<font color ="#0000FF">*-- ALV 변수 선언</font>
+DATA: go_container_0140 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_0140  TYPE REF TO cl_gui_alv_grid.
+
+DATA:gs_layout_0140  TYPE lvc_s_layo,
+     gs_variant_0140 TYPE disvariant,
+     gs_sort_0140    TYPE lvc_s_sort,
+     gt_sort_0140    TYPE lvc_t_sort.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA: gt_field_cat_0140 TYPE lvc_t_fcat,
+      gs_field_cat_0140 TYPE lvc_s_fcat.
+
+<font color ="#0000FF">*-- 확인 팝업창을 띄울 때 쓰기 위한 변수</font>
+DATA gv_answer TYPE c LENGTH 1.
+DATA gv_last_char TYPE c LENGTH 1.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

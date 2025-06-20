@@ -1,0 +1,1061 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD050_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD050_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD050_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_data .
+  CALL SCREEN 0100.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0100 .
+
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name = 'CCON'.               " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = go_container.                " Parent Container
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0100 .
+
+  CLEAR gs_layout.
+  CLEAR gs_variant.
+
+<font color ="#0000FF">*-- Layout 관련 코드</font>
+  gs_layout-sel_mode = 'D'.
+  gs_layout-zebra = abap_on. " ZEBRA 옵션 활성화
+
+<font color ="#0000FF">*-- Variant 관련 코드</font>
+  gs_variant-report = sy-cprog.
+<font color ="#0000FF">*  gs_save = 'A'.</font>
+
+<font color ="#0000FF">*-- 행 색칠 관련 코드</font>
+  gs_layout-ctab_fname = 'CELLTAB'.
+
+  gs_layout-excp_fname = 'LIGHT'. " exception 필드는 자동으로 가장 맨 앞에 등장
+  gs_layout-excp_led = 'X'.
+
+<font color ="#0000FF">*-- sort 관련 코드</font>
+  CLEAR gs_sort.
+  gs_sort-spos = '1'.
+  gs_sort-fieldname = 'VBELN'.
+  gs_sort-up = 'X'.
+  APPEND gs_sort TO gt_sort.
+
+
+  CLEAR gs_sort.
+  gs_sort-spos = '2'.
+  gs_sort-fieldname = 'SEQNO'.
+  gs_sort-up = 'X'.
+  APPEND gs_sort TO gt_sort.
+
+  CLEAR gs_sort.
+  gs_sort-spos = '3'. " 정렬 순서
+  gs_sort-fieldname = 'DELIV_DATE'. " 정렬이 필요한 필드명
+  gs_sort-up = 'x'. "오름차순
+  APPEND gs_sort TO gt_sort.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0100 .
+
+  REFRESH gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'LIGHT'. " 아이콘 표시
+  gs_field_cat-coltext = '상태'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-icon       = 'X'.
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'VBELN'. " 계약 문서 번호
+  gs_field_cat-fieldname = 'VBELN'.
+  gs_field_cat-key = abap_on.
+  gs_field_cat-hotspot = 'X'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-no_out = abap_on.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'SEQNO'. " 납기 순번
+  gs_field_cat-fieldname = 'SEQNO'.
+  gs_field_cat-coltext = '납기 순번'.
+  gs_field_cat-key = abap_on. " 키 표시
+  gs_field_cat-outputlen = 7.
+  gs_field_cat-col_pos = 1.
+  gs_field_cat-just = 'L'.
+  gs_field_cat-key = abap_on.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'DELIV_DATE'. " 납기일
+  gs_field_cat-fieldname = 'DELIV_DATE'.
+  gs_field_cat-coltext = '납기일'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-col_pos = 2.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'MATNR'. " 자재 코드
+  gs_field_cat-fieldname = 'MATNR'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-col_pos = 3.
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_MAKT'.
+  gs_field_cat-ref_field = 'MAKTX'. " 자재명
+  gs_field_cat-fieldname = 'MAKTX'.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'L'. " 왼쪽 정렬
+  gs_field_cat-col_pos = 4.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'DELIV_QTY'. " 납기 수량
+  gs_field_cat-fieldname = 'DELIV_QTY'.
+  gs_field_cat-coltext = '납기 수량'.
+  gs_field_cat-outputlen = 7.
+  gs_field_cat-qfieldname = 'MEINS'. " 단위 적용
+  gs_field_cat-just = 'R'. " 오른쪽 정렬
+  gs_field_cat-col_pos = 5.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'MEINS'. " 단위
+  gs_field_cat-fieldname = 'MEINS'.
+  gs_field_cat-outputlen = 7.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-col_pos = 6.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'STATUS'. " 결재 상태
+  gs_field_cat-fieldname = 'STATUS'.
+  gs_field_cat-checkbox = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-col_pos = 7.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'STATUS8'. " 판매 오더 문서 생성 여부
+  gs_field_cat-fieldname = 'STATUS8'.
+  gs_field_cat-coltext = '판매 오더'.
+  gs_field_cat-checkbox = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-col_pos = 8.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'STATUS4'. " 출고 여부
+  gs_field_cat-fieldname = 'STATUS4'.
+  gs_field_cat-coltext = '출고'.
+  gs_field_cat-checkbox = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-col_pos = 9.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT070'.
+  gs_field_cat-ref_field = 'STATUS2'. " 대금 청구 문서 생성 여부
+  gs_field_cat-fieldname = 'STATUS2'.
+  gs_field_cat-coltext = '대금 청구'.
+  gs_field_cat-checkbox = abap_on.
+  gs_field_cat-outputlen = 10.
+  gs_field_cat-just = 'C'.
+  gs_field_cat-col_pos = 10.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_event_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_event_0100 .
+
+<font color ="#0000FF">** ALV Grid 객체의 Toolbar 이벤트에 반응하여 실행할 메소드 등록</font>
+  SET HANDLER lcl_event_handler=&gt;on_toolbar FOR go_alv_grid.
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">** ALV Grid 객체의 User Command 이벤트에 반응하여 실행할 메소드 등록</font>
+  SET HANDLER lcl_event_handler=&gt;on_user_command FOR go_alv_grid.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_table_for_display_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_table_for_display_0100 .
+
+  CALL METHOD GO_ALV_gRID-&gt;set_table_for_first_display
+    EXPORTING
+      is_variant      = gs_variant               " Layout
+      is_layout       = gs_layout               " Layout
+    CHANGING
+      it_outtab       = gt_display               " Output Table
+      it_fieldcatalog = gt_field_cat               " Field Catalog
+      it_sort         = gt_sort.             " Sort Criteria
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_display_data .
+
+  CLEAR: gt_cellcol, gs_cellcol.
+
+  LOOP AT gt_display INTO gs_display.
+    REFRESH gt_cellcol.
+    CLEAR gs_cellcol.
+
+
+    IF gs_display-deliv_date &lt; lv_days.
+      gs_cellcol-color-col = 6. " 빨간색
+      gs_cellcol-color-int = 0.
+      gs_cellcol-color-inv = 0.
+      APPEND gs_cellcol TO gt_cellcol.
+    ENDIF.
+
+    gs_display-celltab = gt_cellcol.
+
+    MODIFY gt_display FROM gs_display.
+
+  ENDLOOP.
+
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_alv_display</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_alv_display.
+
+  DATA ls_stable TYPE lvc_s_stbl.
+
+  ls_stable-row = abap_on. " 현재 행 위치 유지
+  ls_stable-col = abap_on. " 현재 열 위치 유지
+
+  CALL METHOD go_alv_grid-&gt;refresh_table_display
+    EXPORTING
+      is_stable = ls_stable.                " With Stable Rows/Columns
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form ucomm_date_change</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM ucomm_date_change .
+
+
+  DATA lt_index_rows TYPE lvc_t_row.
+
+<font color ="#0000FF">* ALV 에서 현재 선택된 라인들의 정보를 가져온다.</font>
+  CALL METHOD go_alv_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = lt_index_rows.                " Indexes of Selected Rows
+
+<font color ="#0000FF">* Internal Table에 들어 있는 라인 수 (sy-tfill) 확인</font>
+  DESCRIBE TABLE lt_index_rows.
+
+<font color ="#0000FF">* 확인된 라인 수에 따라 로직 구현</font>
+  CASE sy-tfill.
+    WHEN 0. " 선택된 라인이 없음
+      MESSAGE s102 DISPLAY LIKE 'E'. " 선택된 행이 없습니다.
+
+    WHEN 1. " 선택된 라인 1줄
+      " 현재 선택된 행 정보를 가져오는 과정
+      DATA ls_index_row LIKE LINE OF lt_index_rows.
+      READ TABLE lt_index_rows INTO ls_index_row INDEX 1.
+      READ TABLE gt_display INTO gs_display INDEX ls_index_row-index.
+
+      IF sy-subrc NE 0.
+        MESSAGE s347 DISPLAY LIKE 'E'. " 현재 선택된 행 정보가 올바르지 않습니다.
+        EXIT.
+      ENDIF.
+
+<font color ="#0000FF">* 이미 결재된 납기 일정의 날짜를 변경하려고 할 때 에러 메시지</font>
+      IF gs_display-status EQ 'X'.
+        MESSAGE i367 DISPLAY LIKE 'E'. " 결재된 납기 일정은 납기일 변경이 불가능합니다.
+        EXIT.
+      ENDIF.
+
+<font color ="#0000FF">* 납품 일정이 지난 날짜를 변경하려고 할 때 에러 메시지</font>
+      IF gs_display-deliv_date &lt; sy-datum.
+        MESSAGE s351 DISPLAY LIKE 'E'. " 이미 지난 납기일은 변경할 수 없습니다.
+        EXIT.
+      ENDIF.
+
+<font color ="#0000FF">* 생산 오더가 이미 발생해서 날짜 변경이 안되는 셀의 납기일을 변경하려고 할 때 에러 메시지</font>
+
+      " 날짜 차이 계산
+
+      IF gs_display-deliv_date &lt; lv_days.
+        MESSAGE s352 DISPLAY LIKE 'E'. " 이미 생산계획이 만들어진 납기 일정의 납품일은 변경할 수 없습니다.
+        EXIT.
+      ENDIF.
+
+      " 현재 선택된 행 번호를 전역변수에 보관
+      gv_current_index = ls_index_row-index.
+
+      " 가져온 현재 행의 납품일을 입력 필드에 출력
+      zca_sdt070-deliv_date = gs_display-deliv_date. " 변경 전 날짜
+      gv_change_date = gs_display-deliv_date. " 변경 후 날짜
+
+      " 먼저 ZCA_SDT190에 이미 존재하는지 확인 (중복 변경 요청 방지)
+      SELECT SINGLE vbeln,
+                    seqno
+                    FROM zca_sdt190
+                    INTO @DATA(ls_tmp_check)
+                    WHERE vbeln = @gs_display-vbeln
+                    AND   seqno = @gs_display-seqno
+                    AND lvorm EQ ''. " 삭제 되지 않은 것 중에서만 조회
+
+      IF sy-subrc EQ 0.
+        " 이미 존재하는 경우 메시지 출력
+        MESSAGE i366 DISPLAY LIKE 'E'  WITH gs_display-vbeln gs_display-seqno.
+        " 계약 문서 번호: &, 납기 순번: & 은 이미 변경 요청이 들어간 납기 일정입니다.
+        EXIT.
+      ENDIF.
+
+
+      CALL SCREEN 0110 STARTING AT 30 10 .
+
+    WHEN OTHERS. " 그 외 (2줄 이상)
+      MESSAGE s353 DISPLAY LIKE 'W'. " 하나의 라인만 선택해주세요.
+  ENDCASE.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data_0100 .
+
+  " 라디오 버튼을 눌렀을 때 조회되는 날짜 설정을 위한 변수 선언
+  DATA: lt_where   TYPE string,
+        lv_to_date TYPE sy-datum,
+        lv_from    TYPE sy-datum,
+        lv_to      TYPE sy-datum.
+
+  " 월 필드를 입력했을 때 조회 로직을 위한 변수 선언
+  DATA: lv_date_fr TYPE sy-datum,
+        lv_date_to TYPE sy-datum,
+        lv_day_fr  TYPE c LENGTH 2,
+        lv_day_to  TYPE c LENGTH 2.
+
+
+  CLEAR lt_where.
+
+<font color ="#0000FF">*-- 기본 조회 조건</font>
+
+  " 기본 조건으로 언어 코드는 사용자의 로그인 언어가 되도록 함.
+  lt_where = | b~spras = '3' |.
+
+  " 계약문서번호는 필수값이며, 계약 문서 번호를 입력했을 때 그 계약문서번호에 해당하는 납품일정만 조회
+  IF zca_sdt070-vbeln IS NOT INITIAL.
+    lt_where = | { lt_where } AND a~vbeln = '{ zca_sdt070-vbeln+0(10) }' |.
+  ENDIF.
+
+<font color ="#0000FF">*-- 라디오버튼 조건</font>
+
+  " 전체 조회 버튼을 선택했을 때 조회 로직
+  IF rb_all = abap_on.
+    lt_where = | { lt_where } |.
+
+    " 예정된 납품 일정을 선택했을 때 조회 로직 ( 오늘 날짜로부터 3개월 이후만 조회 )
+  ELSEIF rb_future = abap_on.
+
+    " 오늘 날짜로부터 3개월 후의 납품 리스트만 뽑기 위해 함수 사용
+    CLEAR: lv_to.
+
+    CALL FUNCTION 'RP_CALC_DATE_IN_INTERVAL'
+      EXPORTING
+        date      = sy-datum
+        days      = 0
+        months    = 3
+        years     = 0
+      IMPORTING
+        calc_date = lv_to.
+
+    lv_from = sy-datum.
+<font color ="#0000FF">*    lt_where = | { lt_where } AND A~DELIV_DATE &gt;= SY-DATUM |.</font>
+    lt_where = | { lt_where } AND A~DELIV_DATE BETWEEN '{ sy-datum }' AND '{ lv_to }' |.
+
+  ELSEIF rb_past = abap_on.
+
+    CLEAR: lv_from, lv_to.
+
+    lv_from = sy-datum(4) && '0101'. " 올해 1월 1일을 조회 시작 날짜 설정
+    lv_to = sy-datum - 1. " 어제까지의 날짜를 조회 종료 날짜로 설정
+    lt_where = | { lt_where } AND a~deliv_date BETWEEN '{ lv_from }' AND '{ lv_to }' |.
+    " YYYYMMDD중 0번째 자리부터 총 8자리를 추출한다는 뜻.
+    " DELIV_DATE가 조회 시작 날짜와 조회 종료 날짜 사이에 있는 것만 조회
+  ENDIF.
+
+
+  " 조회 하고자 하는 월이 한 자리수일 때 앞에 0을 붙여서 01월, 02월 이런식으로 표현해주기
+  IF strlen( gv_month ) = 1.
+    gv_month = '0' && gv_month.
+  ENDIF.
+
+  lv_day_fr = '01'. " 조회 시작 날짜는 GV_MONTH 월 01 일
+  lv_day_to = '31'. " 조회 종료 날짜는 GV_MONTH 월 31 일
+
+
+  lv_date_fr = |{ sy-datum+0(4) }{ gv_month }{ lv_day_fr }|.
+  " 올해의 납품일정만 확인하기 위해 조회 시작 날짜 설정
+  lv_date_to = |{ sy-datum+0(4) }{ gv_month }{ lv_day_to }|.
+  " 올해의 납품일정만 확인하기 위해 조회 종료 날짜 설정
+
+  lt_where = | { lt_where } AND a~deliv_date between lv_date_fr and lv_date_to |.
+
+  " 동적 WHERE절 기반 SELECT
+  SELECT a~vbeln
+         a~vposn
+         a~seqno
+         a~matnr
+         b~maktx
+         a~deliv_date
+         a~deliv_qty
+         a~meins
+         a~status
+         a~status2
+         a~status8
+         a~status4
+    INTO CORRESPONDING FIELDS OF TABLE gt_display
+    FROM zca_sdt070 AS a
+    INNER JOIN zca_makt AS b ON a~matnr = b~matnr
+    WHERE (lt_where).
+
+  IF  sy-subrc NE 0.
+    MESSAGE s100 DISPLAY LIKE 'E'. " 검색조건에 해당되는 데이터가 없습니다.
+    RETURN.
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form approve_data_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM  update_approve_flag .
+
+  " 수집된 (vbeln, seqno)별로 결재상태 'X' 처리
+  LOOP AT gt_selected_keys INTO gs_selected_key.
+
+    " ALV 내부테이블에서 결재상태 처리
+    LOOP AT gt_display ASSIGNING FIELD-SYMBOL(&lt;fs_row&gt;)
+      WHERE vbeln = gs_selected_key-vbeln AND seqno = gs_selected_key-seqno.
+      &lt;fs_row&gt;-status = 'X'.
+    ENDLOOP.
+
+    " DB에서도 결재상태 처리
+    UPDATE zca_sdt070
+      SET status = 'X'
+          aenam = sy-uname
+          aedat = sy-datum
+          aezet = sy-uzeit
+      WHERE vbeln = gs_selected_key-vbeln
+        AND seqno = gs_selected_key-seqno.
+
+  ENDLOOP.
+
+  MESSAGE s371. " 선택하신 납기 일정을 결재하였습니다.
+
+  COMMIT WORK.
+  go_alv_grid-&gt;refresh_table_display( ).
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_contract_head_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_contract_head_0100 .
+
+  IF zca_sdt070-vbeln IS NOT INITIAL.
+    SELECT SINGLE cuscode
+                  cusname
+                  bpadrr
+                  netval_sum
+                  waers
+                  valdel
+                  valunit
+                  status7
+       INTO CORRESPONDING FIELDS OF zca_sdt050
+      FROM zca_sdt050
+      WHERE vbeln EQ zca_sdt070-vbeln.
+  ENDIF.
+
+  IF sy-subrc EQ 0 AND zca_sdt050-status7 EQ 'X'.
+    gv_cont_icon = ICON_Cancel.
+  ELSE.
+    gv_cont_icon = icon_okay.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form cancel_approve_flag</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM cancel_approve_flag .
+  " 실제 선택한 행들의 (계약문서번호, 납품순번) 조합을 수집
+  CALL METHOD go_alv_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  LOOP AT gt_rows INTO gs_row.
+    READ TABLE gt_display INDEX gs_row-index INTO gs_display.
+    IF sy-subrc = 0.
+      CLEAR gs_selected_key.
+      gs_selected_key-vbeln = gs_display-vbeln.
+      gs_selected_key-seqno = gs_display-seqno.
+      " 중복 방지
+      READ TABLE gt_selected_keys WITH KEY vbeln = gs_selected_key-vbeln seqno = gs_selected_key-seqno TRANSPORTING NO FIELDS.
+      IF sy-subrc &lt;&gt; 0.
+        APPEND gs_selected_key TO gt_selected_keys.
+      ENDIF.
+    ENDIF.
+  ENDLOOP.
+
+  " 수집된 (vbeln, seqno)별로 결재상태 'X' 처리
+  LOOP AT gt_selected_keys INTO gs_selected_key.
+
+    " ALV 내부테이블에서 결재상태 처리
+    LOOP AT gt_display ASSIGNING FIELD-SYMBOL(&lt;fs_row&gt;)
+      WHERE vbeln = gs_selected_key-vbeln AND seqno = gs_selected_key-seqno.
+      &lt;fs_row&gt;-status = ' '.
+    ENDLOOP.
+
+    " DB에서도 결재상태 처리
+    UPDATE zca_sdt070
+      SET status = ''
+           aenam = sy-uname
+          aedat = sy-datum
+          aezet = sy-uzeit
+      WHERE vbeln = gs_selected_key-vbeln
+        AND seqno = gs_selected_key-seqno.
+
+  ENDLOOP.
+
+  MESSAGE s372. " 선택하신 납기 일정의 결재를 취소하였습니다.
+
+  COMMIT WORK.
+  go_alv_grid-&gt;refresh_table_display( ).
+
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0140 .
+
+  CALL METHOD go_alv_grid_0140-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout       = gs_layout_0140             " Layout
+    CHANGING
+      it_outtab       = gt_con_list                 " Output Table
+      it_fieldcatalog = gt_field_cat_0140.              " Field Catalog
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0140 .
+
+  CREATE OBJECT go_container_0140
+    EXPORTING
+      container_name = 'CCON2'.                " Name of the Screen CustCtrl Name to Link Container
+
+  CREATE OBJECT go_alv_grid_0140
+    EXPORTING
+      i_parent = go_container_0140.                " Parent Container
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0140 .
+
+  gs_layout_0140-sel_mode = 'D'.
+  gs_layout_0140-zebra = abap_on.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0140 .
+
+  REFRESH gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0140-ref_field = 'VPOSN'.
+  gs_field_cat_0140-fieldname = 'VPOSN'.
+  gs_field_cat_0140-outputlen = 10.
+  gs_field_cat_0140-just = 'C'.
+  gs_field_cat_0140-key = abap_on.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0140-ref_field = 'MATNR'.
+  gs_field_cat_0140-fieldname = 'MATNR'.
+  gs_field_cat_0140-outputlen = 10.
+  gs_field_cat_0140-just = 'C'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_MAKT'.
+  gs_field_cat_0140-ref_field = 'MAKTX'.
+  gs_field_cat_0140-fieldname = 'MAKTX'.
+  gs_field_cat_0140-outputlen = 15.
+  gs_field_cat_0140-just = 'L'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0140-ref_field = 'QTY'.
+  gs_field_cat_0140-fieldname = 'QTY'.
+  gs_field_cat_0140-coltext = '계약 총수량'.
+  gs_field_cat_0140-qfieldname = 'MEINS'.
+  gs_field_cat_0140-outputlen = 10.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0140-ref_field = 'MEINS'.
+  gs_field_cat_0140-fieldname = 'MEINS'.
+  gs_field_cat_0140-outputlen = 4.
+  gs_field_cat_0140-just = 'C'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0140-ref_field = 'NETVAL'.
+  gs_field_cat_0140-fieldname = 'NETVAL'.
+  gs_field_cat_0140-cfieldname = 'WAERS'.
+  gs_field_cat_0140-outputlen = 10.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-ref_table = 'ZCA_SDT060'.
+  gs_field_cat_0140-ref_field = 'WAERS'.
+  gs_field_cat_0140-fieldname = 'WAERS'.
+  gs_field_cat_0140-outputlen = 5.
+  gs_field_cat_0140-just = 'C'.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_filter</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_filter  USING pv_light.
+
+  DATA lt_filter TYPE lvc_t_filt.
+  DATA ls_filter LIKE LINE OF lt_filter.
+
+  IF pv_light IS NOT INITIAL.
+    CLEAR ls_filter.
+    ls_filter-fieldname = 'LIGHT'.
+    ls_filter-sign = 'I'.
+    ls_filter-option = 'EQ'.
+    ls_filter-low = pv_light.
+    ls_filter-high = space.
+    APPEND ls_filter TO lt_filter.
+  ENDIF.
+
+  CALL METHOD go_alv_grid-&gt;set_filter_criteria
+    EXPORTING
+      it_filter = lt_filter.               " Filter Conditions
+
+  PERFORM refresh_alv_display.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form call_prg</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM call_prg .
+
+  IF zca_sdt070-vbeln IS INITIAL.
+
+    CALL TRANSACTION 'ZCASD110'.
+
+  ELSE.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata,
+          ls_bdcdata TYPE          bdcdata,
+          ls_opt     TYPE ctu_params.
+
+    ls_opt-dismode = 'E'. " 에러 발생 시 화면 표시
+    ls_opt-racommit = abap_on.
+
+
+    APPEND VALUE #( program = 'SAPMZCA_SD110' dynpro = '0100' dynbegin = 'X' ) TO lt_bdcdata.
+    APPEND VALUE #( fnam = 'ZCA_SDT070-VBELN' fval = zca_sdt070-vbeln ) TO lt_bdcdata.
+    APPEND VALUE #( fnam = 'BDC_OKCODE' fval = '=SEARCH' ) TO lt_bdcdata.
+
+    CALL TRANSACTION 'ZCASD110' USING lt_bdcdata OPTIONS FROM ls_opt.
+
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form approve_sched</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM approve_sched .
+
+  REFRESH :gt_selected_keys, gt_matched1, gt_matched2.
+  " 내가 선택한 행들을 담아둘 itab 초기화
+
+  " 실제 선택한 행들의 (계약문서번호, 납품순번) 조합을 수집
+  CALL METHOD go_alv_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  LOOP AT gt_rows INTO gs_row.
+    READ TABLE gt_display INDEX gs_row-index INTO gs_display.
+    IF sy-subrc = 0.
+      CLEAR gs_selected_key.
+      gs_selected_key-vbeln = gs_display-vbeln.
+      gs_selected_key-seqno = gs_display-seqno.
+      READ TABLE gt_selected_keys
+      WITH KEY vbeln = gs_selected_key-vbeln seqno = gs_selected_key-seqno TRANSPORTING NO FIELDS.
+
+      IF sy-subrc &lt;&gt; 0.
+        APPEND gs_selected_key TO gt_selected_keys.
+      ENDIF.
+    ENDIF.
+  ENDLOOP.
+
+  LOOP AT gt_selected_keys INTO gs_selected_key.
+    CLEAR gv_status7.
+    SELECT SINGLE status7
+      INTO gv_status7
+      FROM zca_sdt050 WHERE vbeln = gs_selected_key-vbeln.
+
+    SELECT SINGLE vbeln seqno
+      INTO CORRESPONDING FIELDS OF gs_matched
+            FROM zca_sdt070
+      WHERE vbeln = gs_selected_key-vbeln
+        AND seqno = gs_selected_key-seqno
+        AND status EQ 'X'.
+
+    IF sy-subrc EQ 0.
+      APPEND gs_matched TO gt_matched1.
+    ENDIF.
+  ENDLOOP.
+
+<font color ="#0000FF">*-- 에러 메시지 띄우기</font>
+
+  " 중지된 계약을 결재하려고 할 때 메시지
+  IF gv_status7 IS NOT INITIAL.
+    MESSAGE i354 DISPLAY LIKE 'E' WITH gs_selected_key-vbeln. " 계약 번호 & 의 계약이 중지되었습니다.
+    RETURN.
+  ENDIF.
+
+  IF gt_matched1 IS NOT INITIAL.
+    DATA(lv_msg) = |납기 순번:|.
+
+    LOOP AT gt_matched1 INTO gs_matched.
+      DATA(lv_line) = |{ gs_matched-seqno }|.
+      DATA(lv_tmp) = strlen( lv_msg ) - 1.
+      gv_last_char = lv_msg+lv_tmp(1).
+
+      IF gv_last_char EQ ':'.
+
+        lv_msg = lv_msg && |{ lv_line }|.
+
+      ELSE.
+
+        lv_msg = lv_msg && |, { lv_line }|.
+
+      ENDIF.
+    ENDLOOP.
+
+
+    " 여러 줄 메시지를 팝업으로 출력
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = '결재 불가'                " Title line of dialog box
+        txt1  = '다음 납기 일정은 이미 결재된 건입니다.'
+        txt2  = lv_msg.
+
+    RETURN. " 결재 중단
+  ENDIF.
+
+<font color ="#0000FF">*-- 오류가 없을 때 결재 팝업 띄우기</font>
+
+  " 결재할 때 재확인 메시지 출력
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = '결재 확인'
+      text_question         = '정말 결재 하시겠습니까?'
+      text_button_1         = '예'
+      text_button_2         = '아니오'
+      default_button        = '1'
+      display_cancel_button = abap_false
+    IMPORTING
+      answer                = gv_answer.
+
+  IF gv_answer = '1'.
+
+    PERFORM update_approve_flag.
+
+  ELSE.
+    MESSAGE s355. " 결재를 진행을 취소하셨습니다.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form canc_approve_sched</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM canc_approve_sched .
+
+  REFRESH: gt_selected_keys, gt_matched1, gt_matched2.
+  CLEAR gs_selected_key.
+
+  " 실제 선택한 행들의 (계약문서번호, 납품순번) 조합을 수집
+  CALL METHOD go_alv_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  " 내가 누른 행들을 한 줄씩 읽어와서 GT_SELECTED_KEYS에 넣기
+  LOOP AT gt_rows INTO gs_row.
+    READ TABLE gt_display INDEX gs_row-index INTO gs_display.
+    IF sy-subrc = 0.
+      CLEAR gs_selected_key.
+      gs_selected_key-vbeln = gs_display-vbeln.
+      gs_selected_key-seqno = gs_display-seqno.
+      READ TABLE gt_selected_keys
+      WITH KEY vbeln = gs_selected_key-vbeln seqno = gs_selected_key-seqno TRANSPORTING NO FIELDS.
+      IF sy-subrc &lt;&gt; 0.
+        APPEND gs_selected_key TO gt_selected_keys.
+      ENDIF.
+    ENDIF.
+  ENDLOOP.
+
+  " 내가 누른 GT_SELECTED_KEYS를 한 줄씩 읽기
+  LOOP AT gt_selected_keys INTO gs_selected_key.
+
+    CLEAR gv_status7.
+    SELECT SINGLE status7 " 계약 상태 플래그가 찍혀 있는 것 SELECT ( 계약 중지 )
+      INTO gv_status7
+      FROM zca_sdt050 WHERE vbeln = gs_selected_key-vbeln.
+
+    " GT_SELECTED_KEYS에 있는 계약문서 번호, 납기 순번 이면서
+    " 결재 플래그와 판매오더 문서가 생성된 것만 SELECT 하기
+    SELECT SINGLE vbeln seqno status status8
+      FROM zca_sdt070 INTO CORRESPONDING FIELDS OF gs_matched
+    WHERE vbeln EQ gs_selected_key-vbeln
+    AND   seqno EQ gs_selected_key-seqno.
+
+    IF gs_matched-status EQ abap_on AND gs_matched-status8 EQ abap_on.
+      APPEND gs_matched TO gt_matched1. " 결재 플래그가 찍히고 판매 오더 문서 생성 플래그가 찍힌 것
+    ELSEIF gs_matched-status EQ abap_off.
+      APPEND gs_matched TO gt_matched2. " 결재가 안된거
+    ENDIF.
+    CLEAR gs_matched.
+  ENDLOOP.
+
+<font color ="#0000FF">*-- 에러 메시지 띄우기</font>
+
+  " 중지된 계약을 결재 취소 하려고 할 때 메시지
+  IF gv_status7 IS NOT INITIAL.
+    MESSAGE i354 DISPLAY LIKE 'E' WITH gs_selected_key-vbeln. " 계약 번호 & 의 계약이 중지되었습니다.
+    RETURN.
+  ENDIF.
+
+  IF gs_display-status IS INITIAL.
+    MESSAGE '아직 결재가 되지 않은 납기 일정입니다.' TYPE 'I' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  " 판매 오더 문서 생성 플래그가 찍힌 것을 결재 취소 하려고 할 때 에러 메시지
+
+  IF gt_matched1 IS NOT  INITIAL.
+    CLEAR gv_last_char.
+    DATA(lv_msg) = |납기 순번:|.
+
+    LOOP AT gt_matched1 INTO gs_matched.
+      DATA(lv_line) = |{ gs_matched-seqno }|.
+      DATA(LV_tMP) = strlen( lv_msg ) - 1.
+      gv_last_char = lv_msg+lv_tmp(1).
+
+      IF gv_last_char EQ ':'.
+        lv_msg = lv_msg && |{ lv_line }|.
+      ELSE.
+        lv_msg = lv_msg && |, { lv_line }|.
+      ENDIF.
+      CLEAR gs_matched.
+    ENDLOOP.
+
+    " 여러 줄 메시지를 팝업으로 출력
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = '결재 취소 불가'                " Title line of dialog box
+        txt1  = '다음 납기 일정은 이미 판매 오더 문서가 생성된 건입니다.'
+        txt2  = lv_msg.
+
+    IF gt_matched2 IS INITIAL.
+      RETURN.
+    ENDIF.
+
+
+  ENDIF.
+
+<font color ="#0000FF">*-- 아직 결재가 되지 않은 납기 일정을 선택후 결재 취소 버튼을 눌렀을 때</font>
+
+  IF gt_matched2 IS NOT INITIAL.
+    CLEAR gv_last_char.
+    DATA(lv_msg2) = |납기 순번:|.
+
+    LOOP AT gt_matched2 INTO gs_matched.
+      DATA(lv_line2) = |{ gs_matched-seqno }|.
+      DATA(lv_tmp2) = strlen( lv_msg2 ) - 1.
+      gv_last_char = lv_msg2+lv_tmp2(1).
+
+      IF gv_last_char EQ ':'.
+        lv_msg2 = lv_msg2 && |{ lv_line2 }|.
+
+      ELSE.
+        lv_msg2 = lv_msg2 && |, { lv_line2 }|.
+
+      ENDIF.
+      CLEAR gs_matched.
+    ENDLOOP.
+
+    LOOP AT gt_selected_keys INTO gs_selected_key.
+      CLEAR gv_status7.
+      SELECT SINGLE status7
+        INTO gv_status7
+        FROM zca_sdt050 WHERE vbeln = gs_selected_key-vbeln.
+
+      IF gv_status7 IS NOT INITIAL.
+        MESSAGE i354 DISPLAY LIKE 'E' WITH gs_selected_key-vbeln. " 계약 번호 & 의 계약이 중지되었습니다.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+
+    " 여러 줄 메시지를 팝업으로 출력
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = '결재 취소 불가'                " Title line of dialog box
+        txt1  = '다음 납기 일정은 아직 결재되지 않은 건입니다.'
+        txt2  = lv_msg2.
+    RETURN. " 결재 취소 중단
+
+  ENDIF.
+
+
+<font color ="#0000FF">*-- 어떠한 에러 사항도 없다면 결재 취소 로직 작동</font>
+  CLEAR gv_answer.
+
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = '결재 취소'
+      text_question         = '정말 결재를 취소하시겠습니까?'
+      text_button_1         = '예'
+      text_button_2         = '아니오'
+      default_button        = '1'
+      display_cancel_button = abap_false
+    IMPORTING
+      answer                = gv_answer.
+
+  IF gv_answer = '1'.
+
+<font color ="#0000FF">* 결재 취소 버튼을 눌렀을 때 결재 플래그 없애주기</font>
+    PERFORM cancel_approve_flag.
+
+  ELSE.
+    MESSAGE s362. " 결재 취소 진행을 취소하셨습니다.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form call_dialog_vbeln</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM call_dialog_vbeln .
+
+  DATA: lv_fname TYPE fieldname,
+        lv_value TYPE zca_sdt070-vbeln.
+  GET CURSOR FIELD lv_fname VALUE lv_value.
+
+  IF lv_fname EQ 'ZCA_SDT070-VBELN' AND lv_value IS NOT INITIAL.
+
+    " 120 화면에서 출력할 데이터 조회
+    SELECT a~vposn
+           a~matnr
+           b~maktx
+           a~qty
+           a~meins
+           a~netval
+           a~waers
+      INTO CORRESPONDING FIELDS OF TABLE gt_con_list
+      FROM zca_sdt060 AS a INNER JOIN zca_makt AS b
+      ON a~matnr EQ b~matnr
+      WHERE vbeln EQ gs_display-vbeln
+      AND b~spras EQ '3'.
+
+    IF sy-subrc NE 0.
+      MESSAGE s300 DISPLAY LIKE 'E'. " 검색조건에 해당되는 데이터가 없습니다.
+      RETURN.
+    ENDIF.
+
+    " 팝업으로 0120 화면 호출
+    CALL SCREEN 0120 STARTING AT 30 10 .
+
+  ENDIF.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

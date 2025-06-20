@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD010_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD010_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include MZCA_SD010TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include MZCA_SD010TOP                            - Module Pool      SAPMZCA_SD010</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+PROGRAM sapmzca_sd010 MESSAGE-ID zca_msg..
+
+TABLES: zca_SDT020,
+        zca_kna1,
+        zca_SDT080.
+
+DATA gs_SDT020 TYPE zca_SDT020.
+DATA :grade2    LIKE gs_SDT020-cre_grade,
+      limit     LIKE gs_SDT020-credit_limit, "0.00
+      limit2    LIKE  gs_SDT020-credit_limit, "0.00
+      bal       LIKE gs_SDT020-credit_bal, "0.00 현재 잔액
+      bal_b     LIKE gs_SDT020-credit_bal, "0.00 현재 잔액
+      bal_a     LIKE gs_SDT020-credit_bal, "0.00 예상 잔액
+      waers     LIKE gs_SDT020-waers,
+      waers2    LIKE gs_SDT020-waers,
+      waers3    LIKE gs_SDT020-waers,
+      waers4    LIKE gs_SDT020-waers,
+      waers5    LIKE gs_SDT020-waers,
+      waers6    LIKE gs_SDT020-waers,
+      credit_id LIKE gs_SDT020-credit_id,
+      cuscode   LIKE gs_SDT020-cuscode,
+      cusname   LIKE gs_SDT020-cusname,
+<font color ="#0000FF">*      netwr2    TYPE zca_netwr. "화폐단위 적용이 안됨</font>
+      netwr2    like zca_sdt080-netwr.
+
+DATA ok_code TYPE sy-ucomm.
+
+CONTROLS my_tabstrip TYPE TABSTRIP.
+DATA dynnr TYPE sy-dynnr.
+
+DATA gt_credit LIKE TABLE OF zca_SDT020.
+
+<font color ="#0000FF">*alv</font>
+DATA go_container_tab1 TYPE REF TO cl_gui_custom_container.
+DATA go_container_tab2 TYPE REF TO cl_gui_custom_container.
+DATA go_container_tab3 TYPE REF TO cl_gui_custom_container.
+DATA go_container_modal TYPE REF TO cl_gui_custom_container.
+
+
+DATA go_alv_tab1 TYPE REF TO cl_gui_alv_grid.
+DATA go_alv_tab2 TYPE REF TO cl_gui_alv_grid.
+DATA go_alv_tab3 TYPE REF TO cl_gui_alv_grid.
+DATA go_alv_modal TYPE REF TO cl_gui_alv_grid.
+
+
+TYPES: BEGIN OF ty_cdsv_010,
+         cellcolor    TYPE char4,
+         creditid     TYPE zca_SDT020-credit_id,
+         cuscode      TYPE zca_SDT020-cuscode,
+         salesno      TYPE zca_SDT080-sales_no,
+         vbeln        TYPE zca_SDT080-vbeln,
+         seqno        TYPE zca_SDT080-seqno,
+<font color ="#0000FF">*         posnr           TYPE zca_sdt090-posnr,</font>
+         cusname      TYPE zca_SDT020-cusname,
+         cregrade     TYPE zca_SDT020-cre_grade,
+         creditlimit  TYPE zca_SDT020-credit_limit,
+         creditbal    TYPE zca_SDT020-credit_bal,
+         cussales     TYPE zca_SDT020-cus_sales,
+         waers        TYPE zca_SDT020-waers,
+         defaultcount TYPE zca_SDT020-default_count,
+         salesorg     TYPE zca_SDT080-sales_org,
+         vdatu        TYPE zca_SDT080-vdatu,
+         netwr        TYPE zca_SDT080-netwr,
+         status4      TYPE zca_SDT080-status4,
+         status9      TYPE zca_SDT080-status9,
+         status2      TYPE zca_SDT080-status2,
+         status3      TYPE zca_SDT080-status3,
+         loevm        TYPE zca_SDT080-loevm,
+         bpadrr       TYPE zca_SDT080-bpadrr,
+<font color ="#0000FF">*         delivqty        TYPE zca_sdt090-deliv_qty,</font>
+<font color ="#0000FF">*         regprice        TYPE zca_sdt090-regprice,</font>
+<font color ="#0000FF">*         netwr_i         TYPE zca_sdt090-netwr,</font>
+<font color ="#0000FF">*         qty             TYPE zca_sdt090-qty,</font>
+<font color ="#0000FF">*         meins           TYPE zca_sdt090-meins,</font>
+<font color ="#0000FF">*         delivdate       TYPE zca_sdt090-deliv_date,</font>
+<font color ="#0000FF">*         loevm_i         TYPE zca_sdt090-loevm,</font>
+       END OF ty_cdsv_010.
+
+DATA: gt_tab1 TYPE TABLE OF ty_cdsv_010,
+      gs_tab1 TYPE ty_cdsv_010,
+      gt_tab2 TYPE TABLE OF ty_cdsv_010,
+      gt_tab3 TYPE TABLE OF ty_cdsv_010.
+
+"핫스팟 클릭시 읽어올 한줄
+DATA gs_row TYPE ty_cdsv_010.
+
+"핫스팟 한 줄 저장할 타입 & 변수
+TYPES: BEGIN OF ty_info,
+         salesno      TYPE zca_SDT080-sales_no,
+         bpadrr       TYPE zca_SDT080-bpadrr,
+         zemail       TYPE zca_kna1-zemail,
+         creditid     TYPE zca_SDT020-credit_id,
+         cuscode      TYPE zca_SDT020-cuscode,
+         cusname      TYPE zca_SDT020-cusname,
+         bpcsnr       TYPE zca_kna1-bpcsnr,
+         cregrade     TYPE zca_SDT020-cre_grade,
+         creditlimit  TYPE zca_SDT020-credit_limit,
+         creditbal    TYPE zca_SDT020-credit_bal,
+         netwr        TYPE zca_SDT080-netwr,
+         waers        TYPE zca_SDT020-waers,
+         defaultcount TYPE zca_SDT020-default_count,
+       END OF ty_info.
+
+DATA: gs_credit_info TYPE ty_info.
+
+"필드 카탈로그
+DATA gt_field_cat_0110 TYPE lvc_t_fcat.
+DATA gs_field_cat_0110 TYPE lvc_s_fcat.
+DATA gt_field_cat_0120 TYPE lvc_t_fcat.
+DATA gs_field_cat_0120 TYPE lvc_s_fcat.
+DATA gt_field_cat_0130 TYPE lvc_t_fcat.
+DATA gs_field_cat_0130 TYPE lvc_s_fcat.
+DATA gt_field_cat_0140 TYPE lvc_t_fcat.
+DATA gs_field_cat_0140 TYPE lvc_s_fcat.
+
+<font color ="#0000FF">* SCREEN 0140 modal</font>
+TYPES: BEGIN OF ty_modal,
+         sales_no   TYPE zca_sdt090-sales_no,
+         vposn      TYPE zca_sdt090-vposn,
+         matnr      TYPE zca_sdt090-matnr,
+         maktx      TYPE makt-maktx, "자재명
+         deliv_qty  TYPE zca_sdt090-deliv_qty,
+<font color ="#0000FF">*         regprice   TYPE zca_sdt090-regprice,</font>
+         netwr      TYPE zca_sdt090-netwr,
+         waers      TYPE zca_sdt090-waers,
+         meins      TYPE zca_sdt090-meins,
+         deliv_date TYPE zca_sdt090-deliv_date,
+         loevm      TYPE zca_sdt090-loevm,
+       END OF ty_modal.
+"ALV 데이터를 저장하기 위한 ITAB
+DATA gt_modal  TYPE TABLE OF ty_modal.
+
+"140번 스크린 화면에서 돌아올때 100번 화면 REFRESH를 위한 FLAG
+<font color ="#0000FF">*DATA gv_refresh TYPE c.</font>
+
+"layout
+DATA: gs_layout_0110 TYPE lvc_s_layo,
+      gs_layout_0120 TYPE lvc_s_layo,
+      gs_layout_0130 TYPE lvc_s_layo,
+      gs_layout_0140 TYPE lvc_s_layo.
+
+"여신 잔액에 대한 아이콘
+DATA: icon_bal   TYPE icons-text,
+      gv_search  TYPE icons-text,
+      gv_check   TYPE icons-text,
+      gv_refresh TYPE icons-text,
+      gv_warn    TYPE icons-text.
+
+DATA gs_variant TYPE disvariant.
+DATA gv_sel_SALESNO_CL TYPE zca_SDT080-sales_no.
+DATA gv_sel_SALESNO TYPE zca_SDT080-sales_no.
+DATA gs_sel_row LIKE LINE OF gt_modal  .
+DATA gv_prev_index TYPE zca_SDT080-sales_no.
+
+
+
+DATA CREDIT_LIMIT TYPE ZCA_SDT020-credit_limit.
+  DATA CREDIT_BAL TYPE ZCA_SDT020-credit_bal.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

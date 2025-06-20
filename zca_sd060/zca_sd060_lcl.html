@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD060_LCL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD060_LCL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD060_LCL</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD060_LCL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      on_double_click FOR EVENT double_click OF cl_gui_alv_grid
+        IMPORTING es_row_no  " 내가 double click한 행 번호
+                  e_row      " 내가 double click한 행 번호 (추천) NUMC 걍 짧아서 좋음.
+                  e_column.  " 내가 double click한 열 이름
+ENDCLASS.
+
+CLASS lcl_event_handler IMPLEMENTATION.
+  METHOD on_double_click.
+
+    " 합계행이 아닌 일반적인 행이면 ROWTYPE은 INITIAL 상태로 전달된다.
+    CHECK e_row-rowtype IS INITIAL.
+
+    " ALV와 연결된 출력 데이터 ITAB을 대상으로 한다.
+    READ TABLE gt_sale_h INTO gs_sale_h INDEX e_row-index.
+
+    IF sy-subrc EQ 0.
+      " 더블 클릭한 행의 데이터를 gs_sale_h로 전달했다면,
+      SELECT * FROM zca_sdt090
+        WHERE sales_no EQ @gs_sale_h-sales_no
+        INTO CORRESPONDING FIELDS OF TABLE @gt_sale_i.
+    ENDIF.
+
+    CALL METHOD go_alv_grid_i-&gt;refresh_table_display( ). " item alv 새로고침
+  ENDMETHOD.
+
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

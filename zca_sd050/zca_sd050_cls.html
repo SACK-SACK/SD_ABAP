@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD050_CLS</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD050_CLS</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Class</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD050_CLS</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* CLASS (Definition) LCL_EVENT_HANDELR</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+
+      " ALV의 툴바에 버튼을 다루는 이벤트
+      on_toolbar
+        FOR EVENT toolbar OF cl_gui_alv_grid
+        IMPORTING e_object, " 툴바 버튼 목록을 가진 참조변수
+
+
+      " 내가 TOOLBAR 이벤트로 만든 버튼을 클릭했을 때 작동하는 이벤트
+      on_user_command
+        FOR EVENT user_command OF cl_gui_alv_grid
+        IMPORTING e_ucomm. " E_UCOMM은 내가 입력한 버튼의 function code.
+
+
+ENDCLASS.
+
+CLASS lcl_event_handler IMPLEMENTATION.
+<font color ="#0000FF">*-- on_toolbar</font>
+  METHOD on_toolbar.
+
+    DATA :ls_button LIKE LINE OF e_object-&gt;mt_toolbar,
+          lv_count  TYPE  i.
+
+    CLEAR ls_button.
+    ls_button-butn_type = 3.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    IF rb_future = abap_on.
+      CLEAR ls_button.
+      ls_button-function = 'DATE_CHANGE'.
+      ls_button-text = '날짜 변경 요청'.
+      APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    ELSEIF rb_all = abap_on.
+      CLEAR ls_button.
+      ls_button-function = 'DATE_CHANGE'.
+      ls_button-text = '날짜 변경 요청'.
+      ls_button-disabled = abap_on. " 버튼 비활성화
+      APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    ELSEIF rb_past = abap_on.
+      CLEAR ls_button.
+      ls_button-function = 'DATE_CHANGE'.
+      ls_button-text = '날짜 변경 요청'.
+      ls_button-disabled = abap_on. " 버튼 비활성화
+      APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+
+    ENDIF.
+
+    CLEAR ls_button.
+    ls_button-function = 'FILT_ALL'.
+    ls_button-text      = |전체 ({ lines( gt_display ) })|.
+    ls_button-quickinfo = '전체'.
+    ls_button-icon = icon_refresh.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+
+    CLEAR: ls_button, lv_count.
+    lv_count = REDUCE i( INIT x = 0 FOR ls_display IN gt_display
+                        WHERE ( status = '' )
+                                    NEXT x = x + 1 ).
+    ls_button-function = 'FILT_NO_APPROVAL'.
+    ls_button-text = |({ lv_count })|.
+    ls_button-quickinfo = '결재 승인되지 않은 문서 조회 '.
+    ls_button-icon = icon_led_yellow.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR: ls_button, lv_count.
+    lv_count = REDUCE i( INIT x = 0 FOR ls_display IN gt_display
+                        WHERE ( status = 'X')
+                                    NEXT x = x + 1 ).
+    ls_button-function = 'FILT_APPROVAL'.
+    ls_button-text = |({ lv_count })|.
+    ls_button-quickinfo = '결재 승인된 문서 조회'.
+    ls_button-icon = icon_led_green.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+
+
+  ENDMETHOD.
+
+  METHOD on_user_command.
+    CASE e_ucomm.
+
+      WHEN 'DATE_CHANGE'.
+
+        PERFORM ucomm_date_change.
+
+      WHEN 'FILT_ALL'.
+        PERFORM set_alv_filter USING space.
+
+      WHEN 'FILT_APPROVAL'.
+        PERFORM set_alv_filter USING '3'. " 결재 승인 된 일정
+
+      WHEN 'FILT_NO_APPROVAL'.
+        PERFORM set_alv_filter USING '2'. " 결재 승인이 안된 일정
+
+    ENDCASE.
+  ENDMETHOD.
+
+
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

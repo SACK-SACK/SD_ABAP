@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD080_LCL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD080_LCL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD080_LCL</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD080_LCL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Class (DEFINITION) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+      on_hotspot_click FOR EVENT hotspot_click OF cl_gui_alv_grid
+        IMPORTING e_row_id       " 내가 클릭한 행 번호
+                  e_column_id.   " 내가 클릭한 열 이름
+ENDCLASS.
+<font color ="#0000FF">*----------------트리 이벤트------------------------</font>
+CLASS lcl_tree_handler DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS: tree_double_click
+      FOR EVENT node_double_click OF cl_gui_simple_tree
+      IMPORTING node_key.
+ENDCLASS.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Class (Implementation) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler IMPLEMENTATION.
+
+  METHOD on_hotspot_click.
+
+    CASE e_column_id-fieldname.
+      WHEN 'SALES_NO'.
+        "클릭한 행 가져오기
+<font color ="#0000FF">*        DATA gs_row LIKE gs_sale.</font>
+        READ TABLE gt_sale INTO gs_row INDEX e_row_id-index.
+        IF sy-subrc EQ 0.
+          DATA lt_all TYPE TABLE OF ty_mat_check.
+          SELECT salesno, vposn, matnr, maktx, charg, vfdat,
+                 delivqty, btqty, meins, netwr, waers, lvorm
+            FROM zca_sd_cdsv_040
+           WHERE salesno = @gs_row-sales_no
+             AND spras = '3'
+             AND ( werks = 'P001' OR werks IS INITIAL )
+<font color ="#0000FF">**            AND btqty &gt; 0</font>
+<font color ="#0000FF">**            AND WERKS = 'P001' "이렇게 하면 안되나??</font>
+            INTO CORRESPONDING FIELDS of TABLE @lt_all.
+
+          DATA: lt_result TYPE STANDARD TABLE OF ty_mat_check,
+                lt_temp   TYPE STANDARD TABLE OF ty_mat_check,
+                lv_matnr  TYPE matnr.
+
+          SORT lt_all BY matnr btqty DESCENDING vfdat DESCENDING.
+
+          LOOP AT lt_all INTO DATA(ls_line).
+            IF lv_matnr IS INITIAL OR lv_matnr &lt;&gt; ls_line-matnr.
+              CLEAR lt_temp.
+              lv_matnr = ls_line-matnr.
+            ENDIF.
+
+            " 수량 있는 배치면 모두 추가
+            IF ls_line-btqty &gt; 0.
+              APPEND ls_line TO lt_result.
+            ELSE.
+              " 수량이 0이지만 해당 자재가 result에 아직 없으면 첫 번째만 추가
+              READ TABLE lt_result WITH KEY matnr = ls_line-matnr TRANSPORTING NO FIELDS.
+              IF sy-subrc &lt;&gt; 0.
+                APPEND ls_line TO lt_result.
+              ENDIF.
+            ENDIF.
+          ENDLOOP.
+
+          gt_mat = lt_result.
+
+          "삭제 플래그 0 처리를 통해 sdv40번에서 모든 판매오더가 보일 수 있도록 설정
+<font color ="#0000FF">*          LOOP AT gt_mat ASSIGNING FIELD-SYMBOL(&lt;fs_mat&gt;).</font>
+<font color ="#0000FF">*            IF &lt;fs_mat&gt;-lvorm = 'X'.</font>
+<font color ="#0000FF">*              &lt;fs_mat&gt;-btqty = 0.  " 수량 강제 0 세팅</font>
+<font color ="#0000FF">*            ENDIF.</font>
+<font color ="#0000FF">*          ENDLOOP.</font>
+
+          PERFORM set_icon_0130.
+          PERFORM set_info_0130 USING gs_row-sales_no.
+<font color ="#0000FF">*          PERFORM set_info USING ls_row-sales_no.</font>
+          CALL SCREEN 0130 STARTING AT 10 5 ENDING AT 145 30.
+        ENDIF.
+      WHEN 'OUTNUM'.
+        "클릭한 행 가져오기
+        DATA ls_row_out LIKE LINE OF gt_out.
+        READ TABLE gt_out INTO ls_row_out INDEX e_row_id-index.
+        DATA(lv_sel_outnum) = ls_row_out-outnum.
+
+        "이전에 클릭한 행
+        DATA lv_prev_index LIKE ls_row_out-outnum.
+
+        IF sy-subrc EQ 0.
+          IF gv_prev_index IS NOT INITIAL.
+            READ TABLE gt_out INTO ls_row_out INDEX gv_prev_index. "이전에 선택한 행 불러오기
+
+            CLEAR ls_row_out-cellcolor. " 색 초기화
+
+            MODIFY gt_out FROM ls_row_out "gt_sale에 반영
+            INDEX gv_prev_index
+            TRANSPORTING cellcolor.
+          ENDIF.
+<font color ="#0000FF">*    hotspot 클릭한 라인은 색상 처리</font>
+          ls_row_out-cellcolor = 'C310'. " 색상(C) 노란색(3) 진한(1) 배경(0)
+
+<font color ="#0000FF">*     ITAB 에서 클릭한 데이터의 값만 ls_row에서 값을 가져와 변경한다.</font>
+          MODIFY gt_out FROM ls_row_out
+                            INDEX e_row_id-index
+                            TRANSPORTING cellcolor .
+
+          gv_prev_index = e_row_id-index. "현재 클릭한 행 변수에 저장
+
+          SELECT
+            a~outnum,
+            a~vposn,
+            a~matnr,
+            a~werks,
+            a~lgort,
+            a~lfqty,
+            a~meins,
+            b~maktx
+            FROM zca_sdt110 AS a
+            INNER JOIN zca_makt AS b
+            ON a~matnr EQ b~matnr
+            WHERE a~outnum = @lv_sel_outnum
+            AND b~spras = '3'
+            INTO CORRESPONDING FIELDS OF TABLE @gt_out_i.
+<font color ="#0000FF">*        WHEN 'BPADRR'.</font>
+<font color ="#0000FF">*          " 1) 기존 주소 가져오기</font>
+<font color ="#0000FF">*          DATA(lv_old_addr) = ls_row-bpadrr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          " 2) 팝업 or Selection Screen 열기 → 새 주소 받아오기</font>
+<font color ="#0000FF">*          PERFORM get_new_address USING lv_old_addr</font>
+<font color ="#0000FF">*                                  CHANGING ls_row-bpadrr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          " 3) 내부 테이블 갱신</font>
+<font color ="#0000FF">*          MODIFY gt_sale FROM ls_row INDEX e_row_id-index.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          " 4) DB 갱신</font>
+<font color ="#0000FF">*          UPDATE zca_sdt080 SET bpadrr = ls_row-bpadrr</font>
+<font color ="#0000FF">*            WHERE sales_no = ls_row-sales_no.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          " 5) ALV 다시 그리기</font>
+<font color ="#0000FF">*          CALL METHOD go_alv_0140-&gt;refresh_table_display.</font>
+        ENDIF.
+    ENDCASE.
+
+
+    LEAVE TO SCREEN 0100.
+
+  ENDMETHOD.
+ENDCLASS.
+<font color ="#0000FF">*----------------트리 이벤트------------------------</font>
+CLASS lcl_tree_handler IMPLEMENTATION.
+  METHOD tree_double_click.
+    PERFORM handle_node_click USING node_key.
+  ENDMETHOD.
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

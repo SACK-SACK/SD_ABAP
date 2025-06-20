@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD030</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD030</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [SD] 출고 문서 조회 및 청구</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_SD030</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& [SD] 출고 문서 조회 및 청구</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zca_sd030 MESSAGE-ID zca_msg.
+
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 선언 관련 Include</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+include <a href ="zca_sd030_top.html">ZCA_SD030_top</a>. " 전역 변수
+include <a href ="zca_sd030_scr.html">ZCA_SD030_scr</a>. " Selection Screen
+include <a href ="zca_sd030_lcl.html">ZCA_SD030_lcl</a>.
+
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 구현 관련 Include</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+include <a href ="zca_sd030_pbo.html">ZCA_SD030_pbo</a>. " Process Before Output( Normal Screen의 Module)
+include <a href ="zca_sd030_pai.html">ZCA_SD030_pai</a>. " Process After Input ( Normal Screen의 Module)
+include <a href ="zca_sd030_f01.html">ZCA_SD030_f01</a>. " FORM-Subroutines ( Program의 Modulization)
+
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">* ABAP Events</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+INITIALIZATION.
+
+
+AT SELECTION-SCREEN OUTPUT.
+
+
+AT SELECTION-SCREEN.
+
+
+START-OF-SELECTION.
+  PERFORM select_ivoice_data.
+  CALL SCREEN 100.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* T0100 --&gt; [SD] 출고 문서 조회 및 청구</font>
+<font color ="#0000FF">* T0110 --&gt; 청구서 조회</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* PA_CUSCD D       .</font>
+<font color ="#0000FF">* PA_SALES D       .</font>
+<font color ="#0000FF">* P_ST5         미청구건</font>
+<font color ="#0000FF">* SO_LFDAT         출고 요청일</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   청구합니다</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*304   테이블에 Insert 실패했습니다.</font>
+<font color ="#0000FF">*305   선택한 행이 없습니다.</font>
+<font color ="#0000FF">*316   출고 문서 데이터가 없습니다.</font>
+<font color ="#0000FF">*317   이미 청구되었습니다.</font>
+<font color ="#0000FF">*318   생성되지 않았습니다.</font>
+<font color ="#0000FF">*319   에러발생</font>
+<font color ="#0000FF">*342   청구 문서 번호 생성 실패</font>
+<font color ="#0000FF">*343   ZCA_SDT080 업데이트 실패</font>
+<font color ="#0000FF">*344   ZCA_SDT070 업데이트 실패</font>
+<font color ="#0000FF">*345   ZCA_SDT100 업데이트 실패</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

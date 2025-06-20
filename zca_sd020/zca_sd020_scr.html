@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD020_SCR</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD020_SCR</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Selection-screen</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD020_SCR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME TITLE TEXT-001.
+
+  SELECT-OPTIONS: so_vbeln FOR zca_sdt050-vbeln NO-EXTENSION, " 계약 문서 번호
+                  so_cuscd FOR zca_sdt050-cuscode NO INTERVALS NO-EXTENSION, " 고객 코드
+                  so_name FOR zca_sdt050-cusname  NO INTERVALS NO-EXTENSION. " 계약 종료일 범위
+
+SELECTION-SCREEN END OF BLOCK b01.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

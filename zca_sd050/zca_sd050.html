@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD050</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD050</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [SD] 납기 일정 조회</b></font>
+<hr>
+<pre width="100">
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_SD050</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& [SD] 납기 일정 조회</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zca_sd050 MESSAGE-ID zca_msg.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 선언 관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_sd050_top.html">ZCA_SD050_top</a>. " 전역 변수
+include <a href ="zca_sd050_cls.html">zca_sd050_cls</a>. " Class
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 구현 관련 Inlcude</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_sd050_pbo.html">zca_sd050_pbo</a>.
+include <a href ="zca_sd050_pai.html">zca_sd050_pai</a>.
+include <a href ="zca_sd050_f01.html">zca_sd050_f01</a>.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* ABAP Events</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+INITIALIZATION.
+
+      call function <a href ="zca_pp_get_pos_date/zca_pp_get_pos_date.html">'ZCA_PP_GET_POS_DATE'</a>
+        IMPORTING
+          ev_date = lv_days.              " 최대 납품일 변경 가능 일자를 구하는 FUNCTION 호출
+
+AT SELECTION-SCREEN OUTPUT.
+
+AT SELECTION-SCREEN.
+
+START-OF-SELECTION.
+
+  " 출력용 데이터를 화면에 출력하기 위해 0100 화면을 호출
+  PERFORM display_data.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* T0100 --&gt; [SD] 납기 일정 조회 및 일정 수정 프로그램</font>
+<font color ="#0000FF">* T0110 --&gt; [SD] 납기일 변경</font>
+<font color ="#0000FF">* T0120 --&gt; [SD] 계약 내용 조회</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* L01 납품일 변경</font>
+<font color ="#0000FF">* L02 결재</font>
+<font color ="#0000FF">* M01 계약문서번호만 클릭해주세요</font>
+<font color ="#0000FF">* M02 선택한 데이터를 찾을 수 없습니다.</font>
+<font color ="#0000FF">* M03 납품일이 변경되었습니다.</font>
+<font color ="#0000FF">* M04 납품일 변경 중 오류가 발생했습니다.</font>
+<font color ="#0000FF">* M05 선택된 라인이 없습니다.</font>
+<font color ="#0000FF">* M06 하나의 라인만 선택해주세요</font>
+<font color ="#0000FF">* M07 정말로 납품 일정을 바꾸시겠습니까?</font>
+<font color ="#0000FF">* M08 이미 지난 납품일은 변경할 수 없습니다.</font>
+<font color ="#0000FF">* M09 이미 확정된 일정의 납기일은 변경할 수 없습니다.</font>
+<font color ="#0000FF">* T01 예</font>
+<font color ="#0000FF">* T02 아니오</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   성공적으로 납기일 변경이 요청되었습니다.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*100   검색조건에 해당되는 데이터가 없습니다.</font>
+<font color ="#0000FF">*102   선택된 행이 없습니다.</font>
+<font color ="#0000FF">*300   존재하지 않는 계약문서번호입니다. 다시 입력해주세요.</font>
+<font color ="#0000FF">*301   계약문서번호를 입력해주세요.</font>
+<font color ="#0000FF">*347   현재 선택된 행 정보가 올바르지 않습니다.</font>
+<font color ="#0000FF">*351   이미 지난 납기일은 변경할 수 없습니다.</font>
+<font color ="#0000FF">*352   이미 생산계획이 만들어진 납기 일정의 납기일은 변경할 수 없습니다.</font>
+<font color ="#0000FF">*353   하나의 라인만 선택해주세요.</font>
+<font color ="#0000FF">*354   계약 번호 & 의 계약이 중지되었습니다.</font>
+<font color ="#0000FF">*355   결재를 진행을 취소하셨습니다.</font>
+<font color ="#0000FF">*358   변경된 납기일은 다음 납기일 &보다 이전이거나 같아야 합니다.</font>
+<font color ="#0000FF">*359   변경된 납기일은 과거 날짜가 될 수 없습니다.</font>
+<font color ="#0000FF">*360   변경된 납기일은 생산 계획이 확정된 날짜가 될 수 없습니다.</font>
+<font color ="#0000FF">*362   결재 취소 진행을 취소하셨습니다.</font>
+<font color ="#0000FF">*366   계약 문서 번호: &, 납기 순번: & 은 이미 변경 요청이 들어간 납기 일정입니다.</font>
+<font color ="#0000FF">*367   결재된 납기 일정은 납기일 변경이 불가능합니다.</font>
+<font color ="#0000FF">*369   납기일 변경 요청 문서 번호 채번에 실패했습니다.</font>
+<font color ="#0000FF">*371   선택하신 납기 일정을 결재하였습니다.</font>
+<font color ="#0000FF">*372   선택하신 납기 일정의 결재를 취소하였습니다.</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

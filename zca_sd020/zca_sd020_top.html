@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD020_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD020_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD020_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+TABLES :zca_sdt050,
+        zca_sdt020.
+
+
+DATA: BEGIN OF gs_cont_hd,
+        vbeln         TYPE zca_sdt050-vbeln, " 계약 문서 번호
+        cuscode       TYPE zca_sdt050-cuscode, " 고객 코드
+        cusname       TYPE zca_sdt050-cusname, " 고객명
+        vbegdat       TYPE zca_sdt050-vbegdat, " 계약 시작일
+        venddat       TYPE zca_sdt050-venddat, " 계약 종료일,
+        netval_sum    TYPE zca_sdt050-netval_sum, " 계약 총 금액
+        waers         TYPE zca_sdt050-waers, " 통화 단위
+        default_count TYPE zca_sdt020-default_count, " 채무 불이행 횟수
+      END OF gs_cont_hd,
+
+      gt_cont_hd LIKE TABLE OF gs_cont_hd.
+
+<font color ="#0000FF">*-- ALV에 띄울 Internal table 변수 선언</font>
+DATA:BEGIN OF gs_display.
+       INCLUDE STRUCTURE gs_cont_hd.
+DATA:  icon TYPE icon-id,
+     END OF gs_display,
+     gt_display LIKE TABLE OF gs_display.
+
+<font color ="#0000FF">*-- OK_CODE 선언</font>
+DATA ok_code TYPE sy-ucomm.
+
+<font color ="#0000FF">* ALV를 사용하기 위한 참조변수 선언</font>
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">** ALV Layout Variant 저장 및 관리를 위한 변수</font>
+<font color ="#0000FF">*DATA: gs_variant TYPE disvariant,</font>
+<font color ="#0000FF">*      gv_save    TYPE c.</font>
+
+<font color ="#0000FF">* ALV Layout을 다루기 위한 변수</font>
+DATA gs_layout TYPE lvc_s_layo.
+
+<font color ="#0000FF">* ALV Field Catalog 변수</font>
+DATA: gs_field_cat TYPE lvc_s_fcat,
+      gt_field_cat TYPE lvc_t_fcat.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

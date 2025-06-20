@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD040_LCL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD040_LCL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD040_LCL</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD040_LCL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+      on_hotspot_click FOR EVENT hotspot_click OF cl_gui_alv_grid
+        IMPORTING e_row_id       " 내가 클릭한 행 번호
+                  e_column_id.   " 내가 클릭한 열 이름
+ENDCLASS.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Class (Implementation) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler IMPLEMENTATION.
+
+  METHOD on_hotspot_click.
+
+    "클릭한 행 가져오기
+    READ TABLE gt_alv1 INTO ls_row INDEX e_row_id-index.
+
+    IF sy-subrc EQ 0.
+      gv_sel_INV = ls_row-inv_no. "선택한 행의 청구문서번호
+
+    "오른쪽 여신, 고객 정보 select
+    PERFORM select_info USING  gv_sel_inv.
+
+    PERFORM select_inv_item USING  gv_sel_inv.
+
+
+    ENDIF.
+
+    LEAVE TO SCREEN 0100.
+    "PERFORM select_item_data USING lv_vbeln.
+  ENDMETHOD.
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

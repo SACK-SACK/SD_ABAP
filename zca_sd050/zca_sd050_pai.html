@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD050_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD050_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD050_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE  user_command_0100 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'RAD'. " 라디오 버튼 눌렀을 때
+      REFRESH gt_display.
+      CALL METHOD go_alv_grid-&gt;refresh_table_display.
+
+<font color ="#0000FF">*-- 조회 버튼에 대한 로직</font>
+    WHEN 'SEARCH'. " 검색 버튼을 눌렀을 떄 search
+
+      IF zca_sdt070-vbeln IS NOT INITIAL.
+        PERFORM select_data_0100.
+
+        " 라디오버튼 조건에 색칠하기
+        IF rb_future = abap_on.
+          PERFORM make_display_data.
+        ENDIF.
+
+        " 계약 문서 번호를 입력하면 계약 헤더에서 내용 받아오기
+        PERFORM get_contract_head_0100.
+
+        IF go_alv_grid IS BOUND.
+          CALL METHOD go_alv_grid-&gt;set_filter_criteria
+            EXPORTING
+              it_filter = VALUE lvc_t_filt( ).
+        ENDIF.
+      ELSE.
+        MESSAGE s301 DISPLAY LIKE 'E'. " 계약문서번호를 입력해주세요.
+      ENDIF.
+
+<font color ="#0000FF">*-- 결재 버튼에 대한 로직</font>
+    WHEN 'BT_APPROVE'.
+<font color ="#0000FF">* alv 에서 현재 선택된 라인들의 정보를 가져온다.</font>
+      DATA: lt_index_rows TYPE lvc_t_row,
+            ls_index_rows TYPE lvc_s_row.
+
+      CALL METHOD go_alv_grid-&gt;get_selected_rows
+        IMPORTING
+          et_index_rows = lt_index_rows.                " Indexes of Selected Rows
+
+<font color ="#0000FF">* Internal Table에 들어 있는 라인 수 (sy-tfill) 확인</font>
+      DESCRIBE TABLE lt_index_rows.
+
+<font color ="#0000FF">* 확인된 라인 수에 따라 로직 구현</font>
+      CASE sy-tfill.
+        WHEN 0. " 선택된 라인이 없음
+          MESSAGE s102 DISPLAY LIKE 'E'. " 선택된 행이 없습니다.
+
+
+        WHEN OTHERS.
+          PERFORM approve_sched.
+      ENDCASE.
+
+<font color ="#0000FF">*-- 결재 취소 버튼을 위한 로직</font>
+    WHEN 'BT_CANC_APPROVE'.
+      REFRESH lt_index_rows.
+      CLEAR ls_index_rows.
+<font color ="#0000FF">* alv 에서 현재 선택된 라인들의 정보를 가져온다.</font>
+      CALL METHOD go_alv_grid-&gt;get_selected_rows
+        IMPORTING
+          et_index_rows = lt_index_rows.
+
+<font color ="#0000FF">* Internal Table에 들어 있는 라인 수 (sy-tfill) 확인</font>
+      DESCRIBE TABLE lt_index_rows.
+      CASE sy-tfill.
+        WHEN 0. " 선택된 라인이 없음
+          MESSAGE s102 DISPLAY LIKE 'E'. " 선택된 행이 없습니다.
+
+        WHEN OTHERS.
+          PERFORM canc_approve_sched.
+      ENDCASE.
+
+
+<font color ="#0000FF">*-- 판매오더 생성 프로그램 호출을 위한 로직</font>
+    WHEN 'CALL_PRG'.
+      PERFORM call_prg.
+
+<font color ="#0000FF">*-- 입력필드인 계약 문서 번호를 더블클릭하면 다이얼로그 스크린이 뜨게 하기 위한 로직</font>
+    WHEN 'PICK'.
+      PERFORM call_dialog_vbeln.
+
+  ENDCASE.
+
+
+ENDMODULE.
+MODULE user_command_0110 INPUT.
+
+  DATA lv_days TYPE datum.
+
+  save_ok = ok_code.
+  CLEAR ok_code.
+
+  CASE save_ok.
+    WHEN 'CONT'.
+
+<font color ="#0000FF">* 내가 선택한 셀의 다음 납품 일정 찾아오기</font>
+      READ TABLE gt_display INTO DATA(ls_next)
+      WITH KEY vbeln = gs_display-vbeln
+               vposn = gs_display-vposn
+               seqno = gs_display-seqno + 1.
+<font color ="#0000FF">*날짜 비교</font>
+      IF  sy-subrc EQ 0 AND gv_change_date &gt; ls_next-deliv_date. " 다음 납품 순번보다 납품 일정이 미래일 때
+        DATA lv_msg TYPE string.
+        MESSAGE i358 DISPLAY LIKE 'E' WITH ls_next-deliv_date. " 변경된 납품일은 다음 납품일 &보다 이전이거나 같아야 합니다.
+        RETURN.
+      ENDIF.
+
+      IF gv_change_date &lt; sy-datum. " 원하는 변경 날짜가 과거 날짜일 때
+        MESSAGE i359 DISPLAY LIKE 'E'. " 변경된 납기일은 과거 날짜가 될 수 없습니다.
+        RETURN.
+      ENDIF.
+
+      IF gv_change_date &lt; lv_days.
+        MESSAGE i360 DISPLAY LIKE 'E'. " 변경된 납기일은 생산 계획이 확정된 날짜가 될 수 없습니다.
+        RETURN.
+      ENDIF.
+
+
+      " 오늘보다 과거의 날짜도 아니고, 다음 납품 순번의 날짜보다 이전일 때 ( ZCA_SDT190에 데이터 넣기 )
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 승인 테이블에 넣기 위한 코드!!</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+      DATA: ls_change_date TYPE zca_sdt190,
+            lt_change_date TYPE TABLE OF zca_sdt190,
+            ls_num         TYPE char7.
+
+      SELECT SINGLE vbeln,
+                seqno,
+                deliv_date
+    INTO @DATA(ls_tmp_date)
+    FROM zca_sdt070
+    WHERE vbeln = @gs_display-vbeln
+      AND seqno = @gs_display-seqno.
+
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = 'RD'                 " Number range number
+          object      = 'ZCA_DATE'                " Name of number range object
+        IMPORTING
+          number      = ls_num.                  " free number
+
+      IF sy-subrc &lt;&gt; 0.
+        MESSAGE i369 DISPLAY LIKE 'E'. " 납기일 변경 요청 문서 번호 채번에 실패했습니다.
+      ENDIF.
+
+      ls_num = |RD{ ls_num+2(5) }|.
+
+      " 변경 데이터 구성
+      ls_change_date = VALUE #(
+                                date_req_no = ls_num " 납기일 변경 요청 번호
+                                 vbeln            = ls_tmp_date-vbeln
+                                 seqno            = ls_tmp_date-seqno
+                                 date_change_req  = gv_change_date
+                                 before_dev_date  = ls_tmp_date-deliv_date
+                                 approve          = 'W'
+                                 ernam            = sy-uname
+                                 erdat            = sy-datum
+                                 erzet            = sy-uzeit ).
+
+
+      APPEND ls_change_date TO lt_change_date.
+
+
+      INSERT zca_sdt190 FROM TABLE lt_change_date.
+      REFRESH lt_change_date.
+      COMMIT WORK.
+
+      MESSAGE '성공적으로 납기일 변경이 요청되었습니다.' TYPE 'S'.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* ALV가 새로고침할 때마다 현재 행/열에 대한 정보 유지</font>
+      PERFORM refresh_alv_display.
+
+<font color ="#0000FF">*           ALV 새로고침</font>
+      go_alv_grid-&gt;refresh_table_display( ).
+
+
+      LEAVE TO SCREEN 0. " 팝업창 닫기
+
+    WHEN 'CANC'.
+
+      LEAVE TO SCREEN 0.
+
+
+  ENDCASE.
+  go_alv_grid-&gt;refresh_table_display( ).
+
+
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0120  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE user_command_0120 INPUT.
+  save_ok = ok_code.
+  CLEAR ok_code.
+
+  CASE save_ok.
+    WHEN 'CONT'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'TAB1' OR 'TAB2'.
+      my_tabstrip-activetab = save_ok.
+
+  ENDCASE.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

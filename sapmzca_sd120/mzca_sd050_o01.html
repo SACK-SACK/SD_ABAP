@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD050_O01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD050_O01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD050_O01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+
+  CASE my_tabstrip-activetab.
+    WHEN 'TAB1'.
+      SET TITLEBAR 'T0100' WITH TEXT-t01.
+
+    WHEN 'TAB2'.
+      SET TITLEBAR 'T0100' WITH TEXT-t02.
+
+    WHEN OTHERS.
+
+      SET TITLEBAR 'T0100' WITH TEXT-t01.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  " PAI 모듈 중 USER_COMMAND가 오작동 할 수 있으므로, PBO에서 초기화
+  CLEAR ok_code.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_DYNNR_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_dynnr_0100 OUTPUT.
+  CASE my_tabstrip-activetab.
+    WHEN 'TAB1'.
+      " 첫 번째 탭의 Subscreen 번호는 0110
+      dynnr = '0110'.
+
+    WHEN 'TAB2'.
+      " 두 번째 탭의 Subsscreen 번호는 0120
+      dynnr = '0120'.
+
+    WHEN OTHERS.
+      "초기 기본값 설정
+      my_tabstrip-activetab = 'TAB1'.
+      dynnr = '0110'.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0120 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0120 OUTPUT.
+
+  IF go_container_0120 IS INITIAL.
+
+    " Container와 ALV 객체 생성
+    PERFORM create_object_0120.
+
+    " 레이아웃 설정
+    PERFORM set_alv_layout_0120.
+
+    " 필드 카탈로그 설정
+    PERFORM set_alv_fieldcat_0120.
+
+    " ALV 화면 출력을 위해 데이터 전달
+    PERFORM display_alv_0120.
+
+  ELSE.
+
+    CALL METHOD go_alv_grid_0120-&gt;refresh_table_display( ).
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0100 OUTPUT.
+
+  IF go_container_0100 IS INITIAL.
+
+    " Container와 ALV 객체 생성
+    PERFORM create_object_0100.
+
+    " 레이아웃 설정
+    PERFORM set_alv_layout_0100.
+
+    " 필드 카탈로그 설정
+    PERFORM set_alv_fieldcat_0100.
+
+    " ALV 화면 출력을 위해 데이터 전달
+    PERFORM display_alv_0100.
+
+
+  ELSE.
+
+    CALL METHOD go_alv_grid_0100-&gt;refresh_table_display( ).
+
+  ENDIF.
+
+  IF go_container_0100 IS NOT INITIAL.
+
+    PERFORM select_data_0110.
+
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100_2 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0100_2 OUTPUT.
+
+  IF go_container_0100_2 IS INITIAL.
+
+    " Container와 ALV 객체 생성
+    PERFORM create_object_0100_2.
+
+<font color ="#0000FF">*    " 레이아웃 설정</font>
+    PERFORM set_alv_layout_0100_2.
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    " 필드 카탈로그 설정</font>
+    PERFORM set_alv_fieldcat_0100_2.
+<font color ="#0000FF">*</font>
+    " ALV 화면 출력을 위해 데이터 전달
+    PERFORM display_alv_0100_2.
+
+
+  ELSE.
+
+    CALL METHOD go_alv_grid_0100_2-&gt;refresh_table_display( ).
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_INPUT_FIELD_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_input_field_0100 OUTPUT.
+  LOOP AT SCREEN.
+    IF screen-name EQ 'ZCA_SDT050-VBELN'.
+      screen-required = '2'.
+      MODIFY SCREEN.
+    ENDIF.
+  ENDLOOP.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

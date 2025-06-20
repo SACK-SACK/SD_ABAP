@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD030_SCR</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD030_SCR</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD030_SCR</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD030_SCR</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+SELECTION-SCREEN BEGIN OF SCREEN 200 AS SUBSCREEN.
+
+  SELECT-OPTIONS: so_lfdat  FOR zca_sdt100-lfdat.     "출고 요청일자
+
+  PARAMETERS: pa_cuscd TYPE zca_sdt080-cuscode,    "고객 코드
+              pa_sales TYPE zca_sdt100-sales_no,  "판매 오더
+              p_st5    AS CHECKBOX DEFAULT 'X'.   "청구대상(미청구 건만)
+
+SELECTION-SCREEN END OF SCREEN 200.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD040</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD040</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [SD] 청구 문서 조회</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_SD040</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& [SD] 청구 문서 조회</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT ZCA_SD040.
+
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 선언 관련 Include</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+include <a href ="zca_sd040_top.html">ZCA_SD040_top</a>. " 전역 변수
+include <a href ="zca_sd040_scr.html">ZCA_SD040_scr</a>. " Selection Screen
+include <a href ="zca_sd040_lcl.html">zca_sd040_lcl</a>.
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 구현 관련 Include</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+include <a href ="zca_sd040_pbo.html">ZCA_SD040_pbo</a>. " Process Before Output( Normal Screen의 Module)
+include <a href ="zca_sd040_pai.html">ZCA_SD040_pai</a>. " Process After Input ( Normal Screen의 Module)
+include <a href ="zca_sd040_f01.html">ZCA_SD040_f01</a>. " FORM-Subroutines ( Program의 Modulization)
+
+
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+<font color ="#0000FF">* ABAP Events</font>
+<font color ="#0000FF">*---------------------------------------------------------------------*</font>
+INITIALIZATION.
+
+
+AT SELECTION-SCREEN OUTPUT.
+
+
+AT SELECTION-SCREEN.
+
+
+START-OF-SELECTION.
+<font color ="#0000FF">* 테이블의 데이터를 조회하는 로직 구현</font>
+<font color ="#0000FF">*  PERFORM SELECT_DATA.</font>
+call SCREEN 0100.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* T0100 --&gt; [SD] 청구 문서 조회</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* SO_CUSC D       .</font>
+<font color ="#0000FF">* SO_INVNO D       .</font>
+<font color ="#0000FF">* SO_SALNO D       .</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: Hard coded</font>
+<font color ="#0000FF">*   메소드 호출 중 오류가 발생했습니다.</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD090_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD090_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD90_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SENT'.
+
+<font color ="#0000FF">*-- 내가 선택한 행의 고객 코드 읽기</font>
+      DATA: gt_selected_rows TYPE lvc_t_row, " 선택 라인 저장 itab
+            gs_selected_row  TYPE lvc_s_row, " 선택 라인 저장 structure
+            gv_lines         TYPE i, " 선택한 라인 수를 저장할 변수
+            gv_sent_flag     TYPE c.
+
+      CALL METHOD go_alv_grid-&gt;get_selected_rows
+        IMPORTING
+          et_index_rows = gt_selected_rows.                 " Indexes of Selected Rows
+
+      DESCRIBE TABLE gt_selected_rows LINES gv_lines.
+      " 선택된 행 수를 gv_index에 저장 -&gt; 선택된 행의 개수를 알기 위함
+      IF gt_selected_rows IS INITIAL.
+
+        MESSAGE i336 DISPLAY LIKE 'W'. " 라인을 선택해주세요.
+        RETURN.
+
+      ELSEIF gv_lines &gt;= 1.
+        " 한 줄 이상의 라인을 선택했다면
+        " 내가 선택한 행에서의 고객 코드를 읽어옴
+        " zca_kna1에서 고객 코드가 내가 읽어온 고객 코드와 같은 것이 있다면
+        " 이메일 데이터 받아오기.
+      ENDIF.
+
+      LOOP AT gt_selected_rows INTO gs_selected_row.
+        READ TABLE gt_display INTO gs_display INDEX gs_selected_row-index.
+
+        IF gs_display-mail_sent_date2 IS NOT INITIAL.
+          MESSAGE i337 DISPLAY LIKE 'E'. " 2차 메일까지 발송된 계약 건입니다.
+          RETURN.
+        ENDIF.
+
+        IF gs_display-venddat &lt; sy-datum.
+          MESSAGE i338 DISPLAY LIKE 'E'. " 이미 만료된 계약입니다.
+          RETURN.
+        ENDIF.
+
+
+        SELECT SINGLE kunnr
+           zemail
+           INTO CORRESPONDING FIELDS OF gs_email
+      FROM zca_kna1
+      WHERE kunnr = gs_display-cuscode.
+        APPEND gs_email TO gt_email.
+      ENDLOOP.
+
+      DATA lv_answer TYPE c LENGTH 1.
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = '메일 발송'
+          text_question         = '정말 메일을 보내시겠습니까?'(t02)
+          text_button_1         = '예'(t03)
+          text_button_2         = '아니오'(t04)
+          default_button        = '1'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = lv_answer.
+      IF lv_answer = '1'.
+
+        LOOP AT gt_selected_rows INTO gs_selected_row.
+          READ TABLE gt_display INTO gs_display INDEX gs_selected_row-index.
+
+          SELECT SINGLE kunnr
+             zemail
+             INTO CORRESPONDING FIELDS OF gs_email
+        FROM zca_kna1
+        WHERE kunnr = gs_display-cuscode.
+          APPEND gs_email TO gt_email.
+
+<font color ="#0000FF">*-- 메일 보내는 로직실행</font>
+          PERFORM sent_email CHANGING gv_sent_flag.
+        ENDLOOP.
+
+      ELSE.
+        MESSAGE i364. " 메일 전송을 취소했습니다.
+        RETURN.
+      ENDIF.
+
+      IF gv_sent_flag EQ abap_on.
+        ROLLBACK WORK.
+        MESSAGE i339 DISPLAY LIKE 'E'. "메일전송 실패
+        CLEAR gv_sent_flag.
+        RETURN.
+      ENDIF.
+
+      COMMIT WORK.
+      MESSAGE s340. " 메일 전송 성공
+
+      " 메일 전송이 완료되었다면 gt_display에 메일 아이콘을 표시하고, 최근 메일 발송 시간 써주기
+      PERFORM mail_flag.
+
+    WHEN 'CHECK'.
+      CALL TRANSACTION 'SOST'.
+
+    WHEN 'PICK'.
+      PERFORM call_dialog_cuscode.
+
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0110  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE user_command_0110 INPUT.
+  save_ok = ok_code.
+
+  CLEAR ok_code.
+  CASE  save_ok.
+    WHEN 'CONT' .
+      LEAVE TO SCREEN 0.
+
+    WHEN 'TAB1' OR 'TAB2'.
+      tabstrip-activetab = save_ok.
+
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0140  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE user_command_0140 INPUT.
+
+  save_ok = ok_code.
+
+  CLEAR ok_code.
+
+  CASE save_ok.
+    WHEN 'CONT'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

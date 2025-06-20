@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD030_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD030_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD030_PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD030_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'SEARCH'.
+      PERFORM select_out_data.
+    WHEN 'INVOICE'.
+      IF gv_sel_out IS INITIAL. " 선택된 행이 없으면
+        MESSAGE s305 DISPLAY LIKE 'E'. "선택한 행이 없습니다.
+        RETURN.
+      ELSE. "있으면
+        SELECT SINGLE status5
+          FROM zca_sdt100
+          INTO @DATA(lv_status5)
+          WHERE outnum = @gv_sel_out.
+        IF lv_status5 = 'X'.
+          MESSAGE s317 DISPLAY LIKE 'E'. "이미 청구되었습니다.
+          RETURN.
+        ENDIF.
+      ENDIF.
+
+      DATA: lv_answer TYPE c.
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = '청구 확인'
+          text_question         = |출고 문서 [{ gv_sel_out }]에 대해 청구를 진행하시겠습니까?|
+          text_button_1         = '예'(001)
+          text_button_2         = '아니오'(002)
+          default_button        = '1'
+          display_cancel_button = ''  " 취소 버튼 없음
+        IMPORTING
+          answer                = lv_answer.
+
+      IF lv_answer = '1'.
+        " 사용자가 '예'를 눌렀을 경우
+        MESSAGE '청구합니다' TYPE 'S' DISPLAY LIKE 'E'.
+        PERFORM gen_invoice.
+      ELSE.
+        MESSAGE '청구가 취소되었습니다.' TYPE 'S'.
+      ENDIF.
+<font color ="#0000FF">*      PERFORM gen_invoice.</font>
+    WHEN 'REFRESH'.
+      PERFORM refresh_all.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0110  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0110 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  F4_SALESNO  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE f4_salesno INPUT.
+<font color ="#0000FF">*  DATA LT_RETURN TYPE TABLE OF DDSHRETVAL.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  TYPES: BEGIN OF TY_SALES,</font>
+<font color ="#0000FF">*    SALESNO TYPE zca_sdt080-SALES_NO,</font>
+<font color ="#0000FF">*    CUSCODE TYPE ZCA_SDT080-CUSCODE.</font>
+<font color ="#0000FF">*    TYPES: END OF TY_SALSE.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  SELECT  PLNUM</font>
+<font color ="#0000FF">*          PYEAR</font>
+<font color ="#0000FF">*          PMONTH</font>
+<font color ="#0000FF">*          PWEEK</font>
+<font color ="#0000FF">*          PLWRK</font>
+<font color ="#0000FF">*          PSTTR</font>
+<font color ="#0000FF">*          PEDTR</font>
+<font color ="#0000FF">*          MRPID</font>
+<font color ="#0000FF">*    FROM ZCA_SDT080 INTO TABLE GT_PLNUM_F4</font>
+<font color ="#0000FF">*    WHERE LOEKZ NE ABAP_ON</font>
+<font color ="#0000FF">*      AND PLWRK EQ PA_PLANT.</font>
+
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD110O01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD110O01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD020O01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+
+  REFRESH gt_selected_keys.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CONTROL_SEARCH_FIELD OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE control_search_field OUTPUT.
+  LOOP AT SCREEN.
+
+    IF screen-name EQ 'ZCA_SDT070-VBELN'.
+      screen-required = '2'.
+      MODIFY SCREEN.
+    ENDIF.
+
+  ENDLOOP.
+
+
+  DATA: gv_prev_vbeln TYPE zca_sdt070-vbeln.
+
+  IF zca_sdt070-vbeln IS NOT INITIAL AND zca_Sdt070-vbeln &lt;&gt; gv_prev_vbeln.
+    " 계약 문서 번호가 변경된 경우에만 실행
+
+    SELECT MAX( seqno ) INTO r_seqnoto
+      FROM zca_sdt070
+      WHERE vbeln EQ zca_sdt070-vbeln.
+
+    gv_prev_vbeln = zca_sdt070-vbeln.
+
+  ELSEIF zca_sdt070-vbeln IS INITIAL.
+
+    CLEAR r_seqnoto.
+
+
+  ENDIF.
+
+
+  " 계약 문서 번호를 입력하기 전까지는 납품 순번을 입력할 수 없게 막아두기
+  LOOP AT SCREEN.
+
+    " 스크린 그룹1이 RA1 인 모든 필드를 한 번에 제어
+    IF screen-group1 = 'RA1'.
+
+      IF zca_sdt070-vbeln IS INITIAL.
+
+        screen-input = 0. " 입력 불가
+
+      ELSE.
+
+        screen-input = 1. " 입력 가능
+
+      ENDIF.
+
+    ENDIF.
+
+    MODIFY SCREEN.
+
+  ENDLOOP.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0100 OUTPUT.
+
+  IF go_container_0100 IS INITIAL.
+
+    " Container와  ALV 객체 생성
+    PERFORM create_object_0100.
+
+    " 0100 ALV의 레이아웃 설정
+    PERFORM set_alv_layout_0100.
+
+    " 0100 ALV의 필드 카탈로그 설정
+    PERFORM set_alv_fieldcat_0100.
+
+    " ALV Event Handler Method 등록
+    PERFORM set_alv_event_0100.
+
+    " 0100 ALV의 화면 출력을 위해 데이터 전달
+    PERFORM display_alv_0100.
+
+
+  ELSE.
+
+    CALL METHOD go_alv_grid_0100-&gt;refresh_table_display( ).
+
+
+    PERFORM modify_screen.
+
+
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_MONTH_DROPDOWN OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_month_dropdown OUTPUT.
+  DATA: lt_vrm   TYPE vrm_values,
+        ls_vrm   TYPE vrm_value,
+        lv_month TYPE c LENGTH 2.
+
+  CLEAR lt_vrm.
+
+  DO 12 TIMES.
+    lv_month = sy-index.
+    IF strlen( lv_month ) = 1.
+      lv_month = '0' && lv_month.
+    ENDIF.
+
+    ls_vrm-key = lv_month .
+    ls_vrm-text = '월'.
+    APPEND ls_vrm TO lt_vrm.
+  ENDDO.
+
+  CALL FUNCTION 'VRM_SET_VALUES'
+    EXPORTING
+      id     = 'GV_MONTH'                " Name of Value Set
+      values = lt_vrm.               " Value table for ID
+
+
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_LIGHT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_light_alv_0100 OUTPUT.
+
+
+  LOOP AT gt_display INTO gs_display.
+
+    IF gs_display-status = 'X' AND gs_display-status8 = 'X'.
+      gs_display-light = '3'. " 납기 일정 결재와 판매문서생성이 된 것.
+
+    ELSEIF gs_display-status = 'X'.
+      gs_display-light = '2'. " 납기 일정만 결재된 것
+
+    ELSEIF gs_display-status IS INITIAL AND gs_display-status8 IS INITIAL.
+      gs_display-light = '1'. " 결재되거나 판매문서 생성이 되지 않은 것.
+
+    ENDIF.
+
+
+    MODIFY gt_display FROM gs_display.
+
+  ENDLOOP.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module MODIFY_GT_DISPLAY OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE modify_gt_display OUTPUT.
+  LOOP AT gt_display INTO gs_display.
+
+    IF gs_display-status EQ 'X'. " 결재 아이콘 표시
+      gs_display-status_icon = '@01@'.
+    ENDIF.
+
+    IF gs_display-status8 EQ 'X'. " 판매 오더 문서 생성 아이콘 표시
+      gs_display-status8_icon = '@01@'.
+    ENDIF.
+
+    IF gs_display-status4 EQ 'X'. " 출고 아이콘 표시
+      gs_display-status4_icon = '@01@'.
+    ENDIF.
+
+    " 수정한 필드들의 값만 Internal table에 반영되기 위해 Transporting 에서 필드를 지정함.
+    MODIFY gt_display FROM gs_display  TRANSPORTING status_icon
+                                                    status8_icon
+                                                    status4_icon.
+
+  ENDLOOP.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_DYNNR_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_dynnr_0110 OUTPUT.
+
+  CASE  my_tabstrip-activetab.
+    WHEN  'TAB1'.
+      dynnr = '0120'.
+
+    WHEN 'TAB2' .
+      dynnr = '0130'.
+
+    WHEN OTHERS.
+      my_tabstrip-activetab = 'TAB1'.
+      dynnr = '0120'.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0110 OUTPUT.
+  SET PF-STATUS 'S0110'.
+
+
+  CASE my_tabstrip-activetab.
+    WHEN 'TAB1'.
+      SET TITLEBAR 'S0110' WITH TEXT-t01.
+
+    WHEN 'TAB2'.
+      SET TITLEBAR 'S0110' WITH TEXT-t02.
+
+    WHEN OTHERS.
+
+      SET TITLEBAR 'S0110' WITH TEXT-t01.
+  ENDCASE.
+
+  SET TITLEBAR 'T0110'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0130 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0130 OUTPUT.
+
+  IF go_container_0130 IS INITIAL.
+
+    " Container와 ALV 객체 생성
+    PERFORM create_object_0130.
+
+    " 레이아웃 설정
+    PERFORM set_alv_layout_0130.
+
+    " 필드 카탈로그 설정
+    PERFORM set_alv_fieldcat_0130.
+
+    " ALV 화면 출력을 위해 데이터 전달
+    PERFORM display_alv_0130.
+
+  ELSE.
+    CALL METHOD go_alv_grid_0130-&gt;refresh_table_display( ).
+  ENDIF.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_ICON OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_icon OUTPUT.
+  CALL FUNCTION 'ICON_CREATE'
+    EXPORTING
+      name   = 'ICON_LED_YELLOW'    " Icon name  (Name from INCLUDE &lt;ICON&gt; )
+    IMPORTING
+      result = icon_st1.           " Icon (enter the screen field here)
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

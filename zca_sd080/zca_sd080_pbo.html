@@ -1,0 +1,451 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD080_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD080_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD080_PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD080_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_DYNNR_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_dynnr_0100 OUTPUT.
+  CASE my_tabstrip-activetab.
+    WHEN 'TAB1'.
+      " 첫 번째 탭의 Subscreen 번호는 0110
+      dynnr = '0110'.
+
+    WHEN 'TAB2'.
+      " 두 번째 탭의 Subsscreen 번호는 0120
+      dynnr = '0120'.
+
+    WHEN OTHERS.
+      "초기 기본값 설정
+      my_tabstrip-activetab = 'TAB1'.
+      dynnr = '0110'.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0110 OUTPUT.
+  IF go_container_0110 IS INITIAL.
+    PERFORM create_object_0110.
+
+    PERFORM set_field_cat_0110.
+
+    PERFORM set_layout_0110.
+
+    PERFORM set_event_0110.
+
+    PERFORM set_display_0110.
+
+  ELSE.
+    CALL METHOD go_alv_0110-&gt;refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0120 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0120 OUTPUT.
+  IF go_container_0120 IS INITIAL.
+    PERFORM create_object_0120.
+
+    PERFORM set_layout_0120.
+
+    PERFORM set_field_cat_0120. "zca_sdt100 필드 카탈로그
+    PERFORM set_field_cat_0120_2. "zca_sdt110 필드 카탈로그
+
+    PERFORM set_event_0120.
+
+    PERFORM set_display_0120.
+  ELSE.
+    CALL METHOD go_alv_0120-&gt;refresh_table_display( ).
+    CALL METHOD go_alv_0120_2-&gt;refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_ICON OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE check_mat OUTPUT.
+  SELECT
+    salesno,
+    vposn,
+    matnr,
+    maktx,
+    charg,
+    delivqty,
+    btqty,
+    meins,
+    status11
+    FROM zca_sd_cdsv_040
+    INTO CORRESPONDING FIELDS OF TABLE @gt_check_mat
+    WHERE spras = @sy-langu " 언어중 하나의 값만 들어오게 하려고
+    AND werks = 'P001'.
+<font color ="#0000FF">*    AND LVORM &lt;&gt; 'X'. " 이거 넣는게 맞나..?</font>
+<font color ="#0000FF">**    ORDER BY salesno, vposn.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  DATA: lv_valid    TYPE abap_bool,</font>
+<font color ="#0000FF">*        gv_totalqty TYPE zca_mmt010-btqty. " 자재별 총합</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  CLEAR lv_valid.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**  LOOP AT gt_check_mat INTO gs_check_mat</font>
+<font color ="#0000FF">**      GROUP BY gs_check_mat-salesno INTO DATA(ls_sales_group).  "salesno 값이 같은 행들끼리 한 그룹으로 묶기</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  LOOP AT gt_check_mat INTO gs_check_mat</font>
+<font color ="#0000FF">*    GROUP BY ( salesno = gs_check_mat-salesno</font>
+<font color ="#0000FF">*               matnr   = gs_check_mat-matnr )</font>
+<font color ="#0000FF">*    INTO DATA(ls_sales_group).</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    lv_valid = abap_true. " 우선 초록색이라고 가정</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    CLEAR gv_totalqty.    " 각 그룹마다 총합 초기화</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT GROUP ls_sales_group INTO gs_check_mat.</font>
+<font color ="#0000FF">*      gv_totalqty += gs_check_mat-btqty. " 같은 판매오더 번호, 같은 자재 번호의 물량 누적</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    LOOP AT GROUP ls_sales_group INTO gs_check_mat.</font>
+<font color ="#0000FF">*      IF gs_check_mat-delivqty &gt; gv_totalqty.</font>
+<font color ="#0000FF">*        lv_valid = abap_false. " 하나라도 부족하면 빨강 표시</font>
+<font color ="#0000FF">*        EXIT. " 나감</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    " 이제 결과를 gt_sale에 반영</font>
+<font color ="#0000FF">**    LOOP AT gt_sale ASSIGNING FIELD-SYMBOL(&lt;fs_sale&gt;)</font>
+<font color ="#0000FF">**      WHERE sales_no = ls_sales_group.</font>
+<font color ="#0000FF">**</font>
+<font color ="#0000FF">**      IF lv_valid = abap_true.</font>
+<font color ="#0000FF">**        &lt;fs_sale&gt;-icon = 'ICON_LED_GREEN'.</font>
+<font color ="#0000FF">**      ELSE.</font>
+<font color ="#0000FF">**        &lt;fs_sale&gt;-icon = 'ICON_LED_RED'.</font>
+<font color ="#0000FF">**      ENDIF.</font>
+<font color ="#0000FF">*    LOOP AT gt_sale INTO gs_sale</font>
+<font color ="#0000FF">*      WHERE sales_no = ls_sales_group-salesno</font>
+<font color ="#0000FF">*      and matnr = ls_sales_group-matnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF lv_valid = abap_true.</font>
+<font color ="#0000FF">*        gs_sale-icon = '@5B@'. " 초록색</font>
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*        gs_sale-icon = '@5C@'. " 빨간색</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      MODIFY gt_sale FROM gs_sale TRANSPORTING icon.</font>
+<font color ="#0000FF">*    ENDLOOP.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  ENDLOOP.</font>
+  DATA: lv_valid      TYPE abap_bool,
+        gv_totalqty   TYPE zca_mmt010-btqty,
+        lt_failed_mat TYPE STANDARD TABLE OF matnr,
+        lv_mat_fail   TYPE abap_bool.
+
+  CLEAR lt_failed_mat.
+
+<font color ="#0000FF">*data lt_status11 type TABLE of zca_sdt180.</font>
+<font color ="#0000FF">*SELECT sales_no status11 from zca_sdt180</font>
+<font color ="#0000FF">*  into CORRESPONDING FIELDS OF table lt_status11.</font>
+
+  " 판매오더별로 그룹핑 (자재는 빼고!)
+  LOOP AT gt_check_mat INTO gs_check_mat
+    GROUP BY gs_check_mat-salesno INTO DATA(ls_sales_group).
+
+    lv_valid = abap_true.  " 오더 전체는 우선 초록불 가정
+
+    " 이 오더에 포함된 모든 자재를 다시 GROUP BY
+    LOOP AT GROUP ls_sales_group INTO gs_check_mat
+      GROUP BY gs_check_mat-matnr INTO DATA(ls_mat_group).
+
+      CLEAR gv_totalqty.
+
+      " 자재별로 배치 수량 누적
+      LOOP AT GROUP ls_mat_group INTO gs_check_mat.
+        gv_totalqty += gs_check_mat-btqty.
+      ENDLOOP.
+
+      " 자재별 납품 수량과 비교
+      LOOP AT GROUP ls_mat_group INTO gs_check_mat.
+        IF gs_check_mat-delivqty &gt; gv_totalqty.
+          lv_valid = abap_false.  " 자재 하나라도 부족하면 오더 전체 실패
+          EXIT.  " 자재 루프 탈출
+        ENDIF.
+      ENDLOOP.
+
+      " 자재 하나라도 부족했으면 오더 검사 중단
+      IF lv_valid = abap_false.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    " GT_SALE (헤더)에서 해당 SALES_NO에 대해 아이콘 표시
+    LOOP AT gt_sale INTO gs_sale
+      WHERE sales_no = ls_sales_group.
+
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      IF gs_sale-status11 = 'X'.</font>
+<font color ="#0000FF">*        gs_sale-icon = icon_warehouse.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*      IF lv_valid = abap_true.</font>
+<font color ="#0000FF">*        gs_sale-icon = '@5B@'.  " 초록불</font>
+<font color ="#0000FF">*      ELSE.</font>
+<font color ="#0000FF">*        gs_sale-icon = '@5C@'.  " 빨간불</font>
+<font color ="#0000FF">*      ENDIF.</font>
+
+      IF lv_valid = abap_true.
+        gs_sale-icon = '@5B@'.  " 초록불
+        IF gs_sale-status11 = 'X'.
+          gs_sale-icon = icon_warehouse.
+        ENDIF.
+      ELSE.
+        gs_sale-icon = '@5C@'.  " 빨간불
+        IF gs_sale-status11 = 'X'.
+          gs_sale-icon = icon_warehouse.
+        ENDIF.
+      ENDIF.
+
+      MODIFY gt_sale FROM gs_sale TRANSPORTING icon.
+    ENDLOOP.
+  ENDLOOP.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0130 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0130 OUTPUT.
+  SET PF-STATUS 'S0130'.
+  SET TITLEBAR 'T0130'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0130 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0130 OUTPUT.
+  IF go_container_0130 IS INITIAL.
+
+    PERFORM create_object_0130.
+
+    PERFORM set_field_cat_0130.
+
+    PERFORM set_layout_0130.
+
+<font color ="#0000FF">*    PERFORM set_event_0130.</font>
+
+    PERFORM set_display_0130.
+
+  ELSE.
+    CALL METHOD go_alv_0130-&gt;refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0140 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0140 OUTPUT.
+  SET PF-STATUS 'S0140'.
+  SET TITLEBAR 'T0140'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CREATE_LISTBOX OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE create_listbox OUTPUT.
+  DATA: lt_box            TYPE vrm_values,
+        ls_box            LIKE LINE OF lt_box,
+        iv_box            TYPE  char50,       "입출력 필드
+        lv_selected_werks TYPE zca_sdt160-werks, " 선택한 플랜트 ID
+        lv_answer         TYPE c.
+
+  CLEAR lt_box.
+
+  "아직 LIST에 초기값이 없을때
+  IF cargo2 IS INITIAL.
+    CASE gv_pname. "추천 물류센터 이름
+      WHEN '서울 강서 물류센터'.
+        cargo2 = '서울 강서 물류센터'.
+      WHEN '세종 중앙 물류센터'.
+        cargo2 = '세종 중앙 물류센터'.
+      WHEN '광주 광산 물류센터'.
+        cargo2 = '광주 광산 물류센터'.
+    ENDCASE.
+  ENDIF.
+
+
+
+  " 리스트박스 항목 넣기
+  ls_box-key = '서울 강서 물류센터'.  " 플랜트ID
+  ls_box-text = '서울 강서 물류센터'. " 물류센터 이름
+  APPEND ls_box TO lt_box.
+
+  ls_box-key = '세종 중앙 물류센터'.
+  ls_box-text = '세종 중앙 물류센터'.
+  APPEND ls_box TO lt_box.
+
+  ls_box-key = '광주 광산 물류센터'.
+  ls_box-text = '광주 광산 물류센터'.
+  APPEND ls_box TO lt_box.
+
+  " 리스트박스에 값 세팅
+  CALL FUNCTION 'VRM_SET_VALUES'
+    EXPORTING
+      id              = 'CARGO2'
+      values          = lt_box
+    EXCEPTIONS
+      id_illegal_name = 1
+      OTHERS          = 2.
+
+  PERFORM set_info_0150 USING gv_sel_salesno.
+
+  IF cargo2 EQ gv_pname.
+    CALL FUNCTION 'ICON_CREATE'
+      EXPORTING
+        name   = 'ICON_CHECKED'                 " Icon name  (Name from INCLUDE &lt;ICON&gt; )
+        text   = '배송지 기준 최적 거리인 물류센터입니다.'            " Icon text (shown behind)
+      IMPORTING
+        result = recomm               " Icon (enter the screen field here)
+<font color ="#0000FF">*            EXCEPTIONS</font>
+<font color ="#0000FF">*       icon_not_found        = 1                " Icon name unknown to system</font>
+<font color ="#0000FF">*       outputfield_too_short = 2                " Length of field 'RESULT' is too small</font>
+<font color ="#0000FF">*       others = 3</font>
+      .
+  ELSE.
+    CLEAR recomm.
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0140 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0140 OUTPUT.
+  IF go_container_0140 IS INITIAL.
+
+    PERFORM create_object_0140.
+
+    PERFORM set_field_cat_0140.
+
+    PERFORM set_layout_0140.
+
+<font color ="#0000FF">*    PERFORM set_event_0140.</font>
+
+    PERFORM set_display_0140.
+
+  ELSE.
+    CALL METHOD go_alv_0140-&gt;refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_TREE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_tree OUTPUT.
+  IF go_tree IS NOT BOUND.
+    PERFORM create_tree.
+    PERFORM make_node.
+    PERFORM event_handeler.                     " 더블클릭 이벤트 등록
+<font color ="#0000FF">*  ELSE.</font>
+    "트리 새로고침
+<font color ="#0000FF">*    CALL METHOD go_tree-&gt;delete_all_nodes.</font>
+<font color ="#0000FF">*    PERFORM make_node.</font>
+  ENDIF.
+<font color ="#0000FF">*  PERFORM make_node.</font>
+<font color ="#0000FF">*  PERFORM event_handeler.</font>
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEANUP_TREE_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE cleanup_tree_0110 OUTPUT.
+  IF go_tree IS BOUND.
+    CALL METHOD go_tree-&gt;free.
+    CLEAR go_tree.
+  ENDIF.
+
+  IF go_tree_con IS BOUND.
+    CALL METHOD go_tree_con-&gt;free.
+    CLEAR go_tree_con.
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_OUT_INFO OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_out_info OUTPUT.
+<font color ="#0000FF">* 오늘 날짜</font>
+  today = sy-datum.
+
+<font color ="#0000FF">*오늘 출고 예정 건수</font>
+  SELECT COUNT( sales_no )
+    FROM zca_sdt080
+    WHERE vdatu = @today
+    INTO @exp_num.
+
+<font color ="#0000FF">*오늘 출고 완료 건수</font>
+  SELECT COUNT( sales_no )
+    FROM zca_sdt080
+    WHERE vdatu = @today
+    AND status4 ='X'
+    INTO @cur_num.
+
+<font color ="#0000FF">* 출고 준수율 계산</font>
+  IF exp_num &gt; 0.
+    out_per = ( cur_num * 100 ) / exp_num.
+  ELSE.
+    out_per = 0.
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0150 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0150 OUTPUT.
+  SET TITLEBAR 'T0150'.
+  SET PF-STATUS 'S0150'.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD050_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD050_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD050_TOP</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+PROGRAM sapmzca_sd050 MESSAGE-ID zca_msg.
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 검색조건 입력 필드를 다루기 위한 Dictionary Structure 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+TABLES zca_sdt050. "0110에서 검색 결과 보관할 변수로도 쓰임
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* OK_CODE 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA ok_code TYPE sy-ucomm.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* TABSTRIP을 사용하기 위해 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CONTROLS my_tabstrip TYPE TABSTRIP.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* TABSTRIP의 Subscreen 번호를 관리하기 위한 변수</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA dynnr TYPE sy-dynnr.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0110 화면에 계약 헤더 내용을 출력하기 위한 변수</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA: BEGIN OF scr_0110,
+        cuscode TYPE zca_sdt050-cuscode, " 고객 코드
+        cusname TYPE zca_sdt050-cusname, " 고객명
+        vbegdat TYPE zca_sdt050-vbegdat, " 계약 시작일
+        venddat TYPE zca_sdt050-venddat, " 계약 종료일
+        valdel  TYPE zca_sdt050-valdel, " 납기 주기 수치값
+        valunit TYPE zca_sdt050-valunit, " 납기 주기 단위
+        palndev TYPE zca_sdt050-palndev, " 납기 일정 생성 여부
+      END OF scr_0110.
+
+DATA palndev_icon TYPE icon_d. " 납기 일정 생성 여부에 대한 아이콘 표시용 필드
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 서브스크린 0100번에 사용할 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*-- ALV 객체 변수 선언</font>
+DATA: go_container_0100   TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_0100    TYPE REF TO cl_gui_alv_grid,
+
+      go_container_0100_2 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_0100_2  TYPE REF TO cl_gui_alv_grid.
+
+
+<font color ="#0000FF">*-- 필드 카탈로그를 쓰기 위한 변수</font>
+DATA: gs_fieldcat_0100   TYPE lvc_s_fcat,
+      gt_fieldcat_0100   TYPE lvc_t_fcat,
+
+      gs_fieldcat_0100_2 TYPE lvc_s_fcat,
+      gt_fieldcat_0100_2 TYPE lvc_t_fcat.
+
+<font color ="#0000FF">*-- ALV 레이아웃 설정을 위한 변수</font>
+DATA: gs_layout_0100   TYPE lvc_s_layo,
+      gs_layout_0100_2 TYPE lvc_s_layo.
+
+<font color ="#0000FF">*-- ALV SORT 기능을 사용하기 위한 변수 선언</font>
+DATA: gs_sort TYPE lvc_s_sort,
+      gt_sort TYPE lvc_t_sort.
+
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 서브스크린 0120번에 사용할 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">*-- ALV 객체 변수 선언</font>
+DATA: go_container_0120 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_0120  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">*-- 필드 카탈로그를 쓰기 위한 변수</font>
+DATA: gs_fieldcat_0120 TYPE lvc_s_fcat,
+      gt_fieldcat_0120 TYPE lvc_t_fcat.
+
+<font color ="#0000FF">*-- ALV 레이아웃 설정을 위한 변수</font>
+DATA gs_layout_0120 TYPE lvc_s_layo.
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 검색 결과를 보관하고 화면에 출력할 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+TABLES: zca_sdt060. " 0120
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 서브스크린 120번에 alv를 담을 데이터를 받아올 변수</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+DATA: BEGIN OF gs_item,
+        vbeln  TYPE zca_sdt060-vbeln, " 계약문서 번호
+        vposn  TYPE zca_sdt060-vposn, " 항목 번호
+        matnr  TYPE zca_sdt060-matnr, " 자재 코드
+        maktx  TYPE zca_makt-maktx, " 자재명
+        qty    TYPE zca_sdt060-qty, " 수량
+        meins  TYPE zca_sdt060-meins, " 단위
+        netval TYPE zca_sdt060-netval, " 자재별 총금액
+        waers  TYPE zca_sdt060-waers, " 통화코드
+      END OF gs_item,
+
+      gt_item LIKE TABLE OF gs_item.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0100번 화면 ALV에 출력할 데이터를 받아올 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*-- 신규 생성된 납품 일정을 출력하는 ALV</font>
+DATA: BEGIN OF gs_deliv_pln,
+        vbeln      TYPE zca_sdt070-vbeln, " 계약 문서 번호
+        vposn      TYPE zca_sdt070-vposn, " 항목 번호
+        seqno      TYPE zca_sdt070-seqno, " 납품 순번
+        deliv_date TYPE zca_sdt070-deliv_date, " 납품일
+        matnr      TYPE zca_sdt070-matnr, " 자재 코드
+        maktx      TYPE zca_makt-maktx, " 자재명
+        deliv_qty  TYPE zca_sdt070-deliv_qty, " 납품 수량
+        meins      TYPE zca_sdt070-meins, " 납품 단위
+      END OF gs_deliv_pln.
+
+DATA: gt_deliv_pln   LIKE TABLE OF gs_deliv_pln,
+      gv_deliv_count TYPE int4.
+
+<font color ="#0000FF">*-- 이미 생성된 납품 일정을 출력하는 ALV ( 단, 판매오더로 생성된 것은 출력하지 않는다. )</font>
+DATA: BEGIN OF gs_list_plan,
+        vbeln      TYPE zca_sdt070-vbeln, " 계약 문서 번호
+        vposn      TYPE zca_sdt070-vposn, " 항목 번호
+        seqno      TYPE zca_sdt070-seqno, " 납품 순번
+        matnr      TYPE zca_sdt070-matnr, " 자재 코드
+        maktx      TYPE zca_makt-maktx, " 자재명
+        deliv_date TYPE zca_sdt070-deliv_date, " 납품일
+        deliv_qty  TYPE zca_sdt070-deliv_qty, " 납품 수량
+        meins      TYPE zca_sdt070-meins, " 납품 단위
+        status     TYPE zca_sdt070-status, " 결재 상태
+      END OF gs_list_plan,
+
+      gt_list_plan LIKE TABLE OF gs_list_plan.
+
+<font color ="#0000FF">* 화면에 데이터를 출력하기 위한 Internal Table</font>
+DATA: BEGIN OF gs_display.
+        INCLUDE STRUCTURE gs_list_plan.
+DATA:   celltab TYPE lvc_t_scol,
+      END OF gs_display,
+
+      gt_display LIKE TABLE OF gs_display.
+
+<font color ="#0000FF">* 셀 색칠을 위한 변수 선언</font>
+DATA: gt_cellcol TYPE lvc_t_scol,
+      gs_cellcol TYPE lvc_s_scol.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

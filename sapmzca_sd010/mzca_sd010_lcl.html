@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD010_LCL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD010_LCL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include MZCA_SD010LCL</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD010LCL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Class (DEFINITION) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+      on_hotspot_click FOR EVENT hotspot_click OF cl_gui_alv_grid
+        IMPORTING e_row_id       " 내가 클릭한 행 번호
+                  e_column_id.   " 내가 클릭한 열 이름
+ENDCLASS.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Class (Implementation) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler IMPLEMENTATION.
+  METHOD on_hotspot_click.
+    data gs_prev_row TYPE ty_cdsv_010.
+<font color ="#0000FF">*  핫스팟 클릭시 읽어올 한줄</font>
+<font color ="#0000FF">*  data ls_row type ty_cdsv_010.</font>
+
+    "클릭한 행 가져오기
+    READ TABLE gt_tab1 INTO gs_row INDEX e_row_id-index.
+
+<font color ="#0000FF">**    Double Click한 라인은 색상 처리를 한다.</font>
+<font color ="#0000FF">*    gs_tab1-row_color = 'C310'. " 색상(C) 노란색(3) 진한(1) 배경(0)</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">**     ITAB 에서 DOUBLE CLICK 했던 라인의 모든 데이터 중에서</font>
+<font color ="#0000FF">**     ROW_COLOR만 GS_DISPLAY에서 값을 가져와 변경한다.</font>
+<font color ="#0000FF">*    MODIFY gt_tab1 FROM gs_tab1</font>
+<font color ="#0000FF">*                      INDEX e_row_id-index</font>
+<font color ="#0000FF">*                      TRANSPORTING row_color .</font>
+
+    IF sy-subrc &lt;&gt; 0.
+      MESSAGE '데이터를 읽을 수 없습니다.' TYPE 'E'.
+      RETURN.
+    ENDIF.
+      gv_sel_SALESNO_cl = gs_row-salesno. "선택한 행의 SALES_NO
+
+       IF gv_prev_index IS NOT INITIAL.
+            READ TABLE gt_tab1 INTO gs_prev_row INDEX gv_prev_index. "이전에 선택한 행 불러오기
+
+            CLEAR gs_row-cellcolor. " 색 초기화
+
+            MODIFY gt_tab1 FROM gs_row "gt_tab1에 반영
+            INDEX gv_prev_index
+            TRANSPORTING cellcolor.
+
+          ENDIF.
+
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    hotspot 클릭한 라인은 색상 처리</font>
+          gs_row-cellcolor = 'C310'. " 색상(C) 노란색(3) 진한(1) 배경(0)
+
+<font color ="#0000FF">*     ITAB 에서 클릭한 데이터의 값만 ls_row에서 값을 가져와 변경한다.</font>
+          MODIFY gt_tab1 FROM gs_row
+                            INDEX e_row_id-index
+                            TRANSPORTING cellcolor .
+
+          gv_prev_index = e_row_id-index. "현재 클릭한 행 변수에 저장
+
+    "여신, 고객 INFO select
+    PERFORM select_info USING gs_row.
+
+    LEAVE TO SCREEN 0100.
+<font color ="#0000FF">*    PERFORM select_item_data USING lv_vbeln.</font>
+  ENDMETHOD.
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

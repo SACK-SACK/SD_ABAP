@@ -1,0 +1,305 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD040_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD040_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD040_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD040_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0110 .
+  gs_layo-sel_mode = 'B'.
+  gs_layo-zebra = abap_on.
+  gs_layo-cwidth_opt = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_h .
+  CALL METHOD go_alv_grid_h-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name              = 'ZCA_SDT120'                 " Internal Output Table Structure Name</font>
+<font color ="#0000FF">*     is_variant                    =                  " Layout</font>
+<font color ="#0000FF">*     i_save                        =                  " Save Layout</font>
+<font color ="#0000FF">*     i_default                     = 'X'              " Default Display Variant</font>
+      is_layout                     = gs_layo                " Layout
+    CHANGING
+      it_outtab                     = gt_alv1               " Output Table
+      it_fieldcatalog               = gt_fieldcat_h                " Field Catalog
+<font color ="#0000FF">*     it_sort                       =                  " Sort Criteria</font>
+<font color ="#0000FF">*     it_filter                     =                  " Filter Criteria</font>
+    EXCEPTIONS
+      invalid_parameter_combination = 1                " Wrong Parameter
+      program_error                 = 2                " Program Errors
+      too_many_lines                = 3                " Too many Rows in Ready for Input Grid
+      OTHERS                        = 4.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE '메소드 호출 중 오류가 발생했습니다.' TYPE 'A'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_billing_h</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_billing_h .
+  SELECT * FROM zca_sdt120
+    INTO CORRESPONDING FIELDS OF TABLE gt_alv1
+    WHERE inv_no IN so_invno
+    AND sales_no IN so_salno
+    AND cuscode IN so_cusc.
+  IF gt_alv1 IS INITIAL.
+    MESSAGE '조회 결과가 없습니다.' TYPE 'I'.
+    RETURN.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_i .
+  DATA gv_variant TYPE disvariant.
+  gv_variant-report = sy-repid.
+  CALL METHOD go_alv_grid_i-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name              = 'ZCA_SDT130'                 " Internal Output Table Structure Name</font>
+      is_variant                    = gv_variant                 " Layout
+      i_save                        = 'A'                 " Save Layout
+<font color ="#0000FF">*     i_default                     = 'X'              " Default Display Variant</font>
+      is_layout                     = gs_layo                " Layout
+    CHANGING
+      it_outtab                     = gt_inv_item               " Output Table
+      it_fieldcatalog               = gt_fieldcat_i                " Field Catalog
+<font color ="#0000FF">*     it_sort                       =                  " Sort Criteria</font>
+<font color ="#0000FF">*     it_filter                     =                  " Filter Criteria</font>
+    EXCEPTIONS
+      invalid_parameter_combination = 1                " Wrong Parameter
+      program_error                 = 2                " Program Errors
+      too_many_lines                = 3                " Too many Rows in Ready for Input Grid
+      OTHERS                        = 4.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE '메소드 호출 중 오류가 발생했습니다.' TYPE 'A'.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_info</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; LS_ROW_INV_NO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_info  USING    pv_inv_no TYPE zca_sdt120-inv_no.
+  SELECT SINGLE inv_no, gjahr, budat, fkdat, cuscode, name1,bilamt, taxamount, finalamt, waers
+    FROM zca_sdv030
+    INTO CORRESPONDING FIELDS OF @gs_info
+    WHERE inv_no EQ @pv_inv_no.
+
+  zca_sdt120-inv_no = gs_info-inv_no.
+  zca_sdt120-gjahr = gs_info-gjahr.
+  zca_sdt120-fkdat = gs_info-fkdat.
+  zca_sdt120-cuscode = gs_info-cuscode.
+  zca_kna1-name1 = gs_info-name1.
+  zca_sdt120-finalamt = gs_info-finalamt.
+  zca_sdt120-bilamt = gs_info-bilamt.
+  zca_sdt120-taxamount = gs_info-taxamount.
+  zca_sdt120-waers = gs_info-waers.
+  w1 = gs_info-waers.
+  w2 = gs_info-waers.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_event_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_event_0110 .
+  SET HANDLER lcl_event_handler=&gt;on_hotspot_click FOR go_alv_grid_h.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_h .
+  REFRESH gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'INV_NO'.
+  gs_fieldcat_h-hotspot    = 'X'.
+  gs_fieldcat_h-coltext    = '청구 문서 번호'.
+  gs_fieldcat_h-key        = 'X'.
+  gs_fieldcat_h-outputlen  = 15.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'SALES_NO'.
+  gs_fieldcat_h-coltext    = '판매 오더 번호'.
+  gs_fieldcat_h-outputlen  = 12.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'CUSCODE'.
+  gs_fieldcat_h-coltext    = '고객 코드'.
+  gs_fieldcat_h-outputlen  = 10.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'WERKS'.
+  gs_fieldcat_h-coltext    = '플랜트'.
+  gs_fieldcat_h-outputlen  = 4.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'LGORT'.
+  gs_fieldcat_h-coltext    = '저장 위치'.
+  gs_fieldcat_h-outputlen  = 4.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'BILAMT'.
+  gs_fieldcat_h-coltext    = '청구 기준 금액'.
+  gs_fieldcat_h-cfieldname = 'WAERS'.
+  gs_fieldcat_h-outputlen  = 15.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'TAXAMOUNT'.
+  gs_fieldcat_h-coltext    = '부가 가치세'.
+  gs_fieldcat_h-cfieldname = 'WAERS'.
+  gs_fieldcat_h-outputlen  = 15.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'FINALAMT'.
+  gs_fieldcat_h-coltext    = '최종 청구 금액'.
+  gs_fieldcat_h-cfieldname = 'WAERS'.
+  gs_fieldcat_h-outputlen  = 15.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'WAERS'.
+  gs_fieldcat_h-coltext    = '통화코드'.
+  gs_fieldcat_h-outputlen  = 5.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+  CLEAR gs_fieldcat_h.
+  gs_fieldcat_h-fieldname  = 'STATUS3'.
+  gs_fieldcat_h-coltext    = '수금완료여부'.
+  gs_fieldcat_h-checkbox   = 'X'.
+  gs_fieldcat_h-outputlen  = 6.
+  APPEND gs_fieldcat_h TO gt_fieldcat_h.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_i</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_i .
+  REFRESH gt_fieldcat_i.
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'INV_NO'.
+  gs_fieldcat_i-coltext    = '청구 문서 번호'.
+  gs_fieldcat_i-key        = 'X'.
+  gs_fieldcat_i-outputlen  = 15.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'ITEM_NO'.
+  gs_fieldcat_i-coltext    = '항목번호'.
+  gs_fieldcat_i-key        = 'X'.
+  gs_fieldcat_i-outputlen  = 5.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'MATNR'.
+  gs_fieldcat_i-coltext    = '자재코드'.
+  gs_fieldcat_i-outputlen  = 20.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+   CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'MAKTX'.
+  gs_fieldcat_i-coltext    = '자재명'.
+  gs_fieldcat_i-outputlen  = 20.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'DELIV_QTY'.
+  gs_fieldcat_i-coltext    = '납품 수량'.
+  gs_fieldcat_i-qfieldname = 'UNIT'.
+  gs_fieldcat_i-outputlen  = 10.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'UNIT'.
+  gs_fieldcat_i-coltext    = '단위'.
+  gs_fieldcat_i-outputlen  = 5.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+<font color ="#0000FF">*  CLEAR gs_fieldcat_i.</font>
+<font color ="#0000FF">*  gs_fieldcat_i-fieldname  = 'REGRPRICE'.</font>
+<font color ="#0000FF">*  gs_fieldcat_i-coltext    = '판매 단가'.</font>
+<font color ="#0000FF">*  gs_fieldcat_i-outputlen  = 15.</font>
+<font color ="#0000FF">*  APPEND gs_fieldcat_i TO gt_fieldcat_i.</font>
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'TAMOUNT'.
+  gs_fieldcat_i-coltext    = '청구기준금액'.
+  gs_fieldcat_i-cfieldname = 'WAERS'.
+  gs_fieldcat_i-outputlen  = 15.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+  CLEAR gs_fieldcat_i.
+  gs_fieldcat_i-fieldname  = 'WAERS'.
+  gs_fieldcat_i-coltext    = '통화코드'.
+  gs_fieldcat_i-outputlen  = 5.
+  APPEND gs_fieldcat_i TO gt_fieldcat_i.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_inv_item</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_inv_item USING pv_inv_no TYPE zca_sdt120-inv_no..
+<font color ="#0000FF">*  SELECT A~INV_NO</font>
+<font color ="#0000FF">*A~ITEM_NO</font>
+<font color ="#0000FF">*A~MATNR</font>
+<font color ="#0000FF">*A~DELIV_QTY</font>
+<font color ="#0000FF">*A~UNIT</font>
+<font color ="#0000FF">*A~REGPRICE</font>
+<font color ="#0000FF">*A~TAMOUNT</font>
+<font color ="#0000FF">*A~WAERS</font>
+<font color ="#0000FF">*    B~MAKTX FROM zca_sdt130 AS A</font>
+<font color ="#0000FF">*    INNER JOIN ZCA_MAKT AS B</font>
+<font color ="#0000FF">*    ON A~matnr = B~MATNR</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF TABLE @gt_inv_item</font>
+<font color ="#0000FF">*    WHERE inv_no = @pv_inv_no.</font>
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

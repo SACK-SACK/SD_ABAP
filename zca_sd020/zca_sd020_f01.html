@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD020_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD020_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Subroutine</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD020_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_data .
+
+  CALL SCREEN 0100.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_data .
+
+  SELECT
+    a~vbeln
+    a~cuscode
+    a~cusname
+    a~vbegdat
+    a~venddat
+    a~netval_sum
+    a~waers
+    b~default_count
+
+    INTO CORRESPONDING FIELDS OF TABLE gt_cont_hd
+    FROM zca_sdt050 AS a INNER JOIN zca_sdt020 AS b
+    ON a~cuscode EQ b~cuscode
+    WHERE vbeln IN so_vbeln
+     AND  a~cuscode IN so_cuscd
+    AND   a~cusname IN so_name.
+
+  SORT gt_cont_hd BY vbeln.
+
+  MOVE-CORRESPONDING gt_cont_hd TO gt_display.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0100 .
+
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name = 'CCON'                 " Name of the Screen CustCtrl Name to Link Container To
+    EXCEPTIONS
+      OTHERS         = 1.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE e333. " 컨테이너 생성 중 오류가 발생했습니다.
+    RETURN.
+  ENDIF.
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = go_container                " Parent Container
+    EXCEPTIONS
+      OTHERS   = 1.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE e334. " ALV Object 생성 중 오류가 발생했습니다.
+    RETURN.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0100 .
+  gs_layout-grid_title = '계약 리스트'(t01).
+  gs_layout-sel_mode = 'D'. " 복수 행 + 행 선택 컬럼 생성 + ANY 셀 선택 가능
+  gs_layout-cwidth_opt = 'X'.
+  gs_layout-zebra = 'X'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0100 .
+
+  REFRESH gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'ICON'.
+  gs_field_cat-coltext = '상태'.
+  gs_field_cat-icon = abap_on.
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT020'.
+  gs_field_cat-ref_field = 'DEFAULT_COUNT'.
+  gs_field_cat-fieldname = 'DEFAULT_COUNT'.  " 채무 불이행 횟수
+  gs_field_cat-just = 'C'.
+  gs_field_cat-no_out = abap_on.
+  APPEND gs_field_cat TO gt_field_cat.
+
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'VBELN'.
+  gs_field_cat-fieldname = 'VBELN'.  " 계약 문서 번호
+  gs_field_cat-key = abap_on.
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'CUSCODE'.
+  gs_field_cat-fieldname = 'CUSCODE'.  " 고객 코드
+  gs_field_cat-key = abap_on.
+  GS_fIELD_CAT-hotspot = abap_on.
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'CUSNAME'.
+  gs_field_cat-fieldname = 'CUSNAME'.  " 고객명
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'VBEGDAT'.
+  gs_field_cat-fieldname = 'VBEGDAT'.   " 계약 시작일
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'VENDDAT'.
+  gs_field_cat-fieldname = 'VENDDAT'.   " 계약 종료일
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-ref_table = 'ZCA_SDT050'.
+  gs_field_cat-ref_field = 'WAERS'.   " 통화단위
+  gs_field_cat-fieldname = 'WAERS'.
+  gs_field_cat-just = 'C'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0100 .
+
+  CALL METHOD go_alv_grid-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout                     = gs_layout         " Layout
+    CHANGING
+      it_outtab                     = gt_display       " Output Table
+      it_fieldcatalog               = gt_field_cat     " Field Catalog
+    EXCEPTIONS
+      invalid_parameter_combination = 1                " Wrong Parameter
+      program_error                 = 2                " Program Errors
+      too_many_lines                = 3                " Too many Rows in Ready for Input Grid
+      OTHERS                        = 4.
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE e335. " 화면 호출 중 오류가 발생했습니다.
+    RETURN.
+  ENDIF.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_event_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_event_0100 .
+  SET HANDLER lcl_event_handler=&gt;on_hotspot_click FOR go_alv_grid.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form modify_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM modify_data .
+
+  LOOP AT gt_display INTO gs_display.
+
+    IF gs_display-default_count &lt;= 0.
+      gs_display-icon = '@5B@'. " 초록색 신호등
+    ELSEIF gs_display-default_count = 1.
+      gs_display-icon = '@5D@'. " 노란색 신호등
+    ELSEIF gs_display-default_count &gt; 1.
+      gs_display-icon = '@5C@'. " 빨간색 신호등
+
+    ENDIF.
+
+    " 수정한 필드들의 값만 Internal table에 반영되기 위해 Transporting 에서 필드를 지정함.
+    MODIFY gt_display FROM gs_display  TRANSPORTING icon
+    WHERE vbeln EQ gs_display-vbeln.
+
+  ENDLOOP.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_alv_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_alv_0100 .
+
+  SELECT
+  vbeln
+  cuscode
+  cusname
+  vbegdat
+  venddat
+  netval_sum
+  waers
+  INTO CORRESPONDING FIELDS OF TABLE gt_display
+  FROM zca_sdt050
+  WHERE vbeln EQ zca_sdt050-vbeln
+   OR  cuscode EQ zca_sdt050-cuscode.
+
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

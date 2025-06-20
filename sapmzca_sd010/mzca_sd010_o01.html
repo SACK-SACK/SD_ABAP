@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD010_O01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD010_O01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD010O01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_DUNNR_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_dynnr_0100 OUTPUT.
+  CASE my_tabstrip-activetab.
+    WHEN 'TAB1'.
+      " 첫 번째 탭의 Subscreen 번호는 0110
+      dynnr = '0110'.
+
+    WHEN 'TAB2'.
+      " 두 번째 탭의 Subsscreen 번호는 0120
+      dynnr = '0120'.
+
+    WHEN 'TAB3'.
+      " 두 번째 탭의 Subsscreen 번호는 0120
+      dynnr = '0130'.
+
+    WHEN OTHERS.
+      "초기 기본값 설정
+      my_tabstrip-activetab = 'TAB1'.
+      dynnr = '0110'.
+  ENDCASE.
+
+ENDMODULE.
+
+MODULE init_alv_0110 OUTPUT.
+
+  "Container 및 ALV의 중복 생성을 방지하기 위해, INITIAL일 때 한번만 작동하도록 점검한다.
+  IF go_container_tab1 IS INITIAL .
+
+    " Container 와 ALV  객체를 생성한다.
+    PERFORM create_object_0110.
+
+    " ALV Layout에 대한 설정을 한다.
+    PERFORM set_alv_layout_0110.
+
+    PERFORM set_alv_fieldcat_0110.
+
+    PERFORM set_alv_event_0110.
+
+    " ALV 화면출력을 위해 데이터를 전달한다.
+    PERFORM display_alv_0110.
+
+  ELSE.
+    CALL METHOD go_alv_tab1-&gt;refresh_table_display( ). " 생성이 이미 완료 된 상태라면 새로고침
+  ENDIF.
+ENDMODULE.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0140 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0140 OUTPUT.
+  "Container 및 ALV의 중복 생성을 방지하기 위해, INITIAL일 때 한번만 작동하도록 점검한다.
+  IF go_container_modal IS INITIAL .
+
+    " Container 와 ALV  객체를 생성한다.
+    PERFORM create_object_0140.
+
+    " ALV Layout에 대한 설정을 한다.
+    PERFORM set_alv_layout_0140.
+
+    PERFORM set_alv_fieldcat_0140.
+
+<font color ="#0000FF">*    PERFORM set_alv_event_0140.</font>
+
+    " ALV 화면출력을 위해 데이터를 전달한다.
+    PERFORM display_alv_0140.
+
+  ELSE.
+    " 생성이 이미 완료 된 상태라면 새로고침
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0140 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0140 OUTPUT.
+  SET PF-STATUS 'S0140'.
+  SET TITLEBAR 'T0140'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0120 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0120 OUTPUT.
+  "Container 및 ALV의 중복 생성을 방지하기 위해, INITIAL일 때 한번만 작동하도록 점검한다.
+  IF go_container_tab2 IS INITIAL .
+
+    " Container 와 ALV  객체를 생성한다.
+    PERFORM create_object_0120.
+
+    " ALV Layout에 대한 설정을 한다.
+    PERFORM set_alv_layout_0120.
+
+    PERFORM set_alv_fieldcat_0120.
+
+<font color ="#0000FF">*    PERFORM set_alv_event_0120.</font>
+
+    " ALV 화면출력을 위해 데이터를 전달한다.
+    PERFORM display_alv_0120.
+
+  ELSE.
+    CALL METHOD go_alv_tab2-&gt;refresh_table_display( ). " 생성이 이미 완료 된 상태라면 새로고침
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0130 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0130 OUTPUT.
+<font color ="#0000FF">*Container 및 ALV의 중복 생성을 방지하기 위해, INITIAL일 때 한번만 작동하도록 점검한다.</font>
+  IF go_container_tab3 IS INITIAL .
+
+    " Container 와 ALV  객체를 생성한다.
+    PERFORM create_object_0130.
+
+    " ALV Layout에 대한 설정을 한다.
+    PERFORM set_alv_layout_0130.
+
+    PERFORM set_alv_fieldcat_0130.
+
+<font color ="#0000FF">*    PERFORM set_alv_event_0130.</font>
+
+    " ALV 화면출력을 위해 데이터를 전달한다.
+    PERFORM display_alv_0130.
+
+  ELSE.
+    CALL METHOD go_alv_tab3-&gt;refresh_table_display( ). " 생성이 이미 완료 된 상태라면 새로고침
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_STATUS_ICONS OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_status_icons OUTPUT.
+  "안내 아이콘
+  gv_search = icon_execute_object.
+  gv_check = icon_select_detail.
+  gv_refresh = icon_refresh.
+
+  IF zca_SDT020-default_count &gt;= 2.
+    CALL FUNCTION 'ICON_CREATE'
+      EXPORTING
+        name   = 'ICON_WARNING'                " Icon name  (Name from INCLUDE &lt;ICON&gt; )
+        text   = '주의: 계약 중지 기준(3회)에 근접'          " Icon text (shown behind)
+<font color ="#0000FF">*       info   = space            " Tooltip (if SPACE, standard tooltip)</font>
+<font color ="#0000FF">*       add_stdinf            = 'X'              " 'X': Tooltip ' ': No tooltip</font>
+      IMPORTING
+        result = gv_warn                 " Icon (enter the screen field here)
+<font color ="#0000FF">*      EXCEPTIONS</font>
+<font color ="#0000FF">*       icon_not_found        = 1                " Icon name unknown to system</font>
+<font color ="#0000FF">*       outputfield_too_short = 2                " Length of field 'RESULT' is too small</font>
+<font color ="#0000FF">*       others = 3</font>
+      .
+    IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO</font>
+<font color ="#0000FF">*       WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.</font>
+    ENDIF.
+  ELSE.
+    CLEAR gv_warn.
+  ENDIF.
+
+  " 여신잔액 아이콘
+  IF bal_a IS INITIAL.
+    CLEAR icon_bal.
+  ELSEIF bal_a &gt;= 0.
+    CALL FUNCTION 'ICON_CREATE'
+      EXPORTING
+        name       = 'ICON_CHECKED'                " Icon name  (Name from INCLUDE &lt;ICON&gt; )
+        text       = '승인 가능'            " Icon text (shown behind)
+        info       = '여신 잔액이 충분합니다.'            " Tooltip (if SPACE, standard tooltip)
+        add_stdinf = 'X'              " 'X': Tooltip ' ': No tooltip
+      IMPORTING
+        result     = icon_bal                " Icon (enter the screen field here)
+      EXCEPTIONS
+       icon_not_found        = 1                " Icon name unknown to system
+       outputfield_too_short = 2                " Length of field 'RESULT' is too small
+       others     = 3
+      .
+    IF sy-subrc &lt;&gt; 0.
+ MESSAGE S319 DISPLAY LIKE 'E'.
+    ENDIF.
+  ELSE.
+    CALL FUNCTION 'ICON_CREATE'
+      EXPORTING
+        name   = 'ICON_INCOMPLETE'                 " Icon name  (Name from INCLUDE &lt;ICON&gt; )
+        text   = '초과'            " Icon text (shown behind)
+<font color ="#0000FF">*       info   = space            " Tooltip (if SPACE, standard tooltip)</font>
+<font color ="#0000FF">*       add_stdinf            = 'X'              " 'X': Tooltip ' ': No tooltip</font>
+      IMPORTING
+        result = icon_bal                 " Icon (enter the screen field here)
+      EXCEPTIONS
+       icon_not_found        = 1                " Icon name unknown to system
+       outputfield_too_short = 2                " Length of field 'RESULT' is too small
+       others = 3
+      .
+    IF sy-subrc &lt;&gt; 0.
+      MESSAGE S319 DISPLAY LIKE 'E'.
+    ENDIF.
+  ENDIF.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

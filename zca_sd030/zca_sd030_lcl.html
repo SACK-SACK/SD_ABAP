@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD030_LCL</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD030_LCL</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD030_LCL</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD030_LCL</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+      on_hotspot_click FOR EVENT hotspot_click OF cl_gui_alv_grid
+        IMPORTING e_row_id       " 내가 클릭한 행 번호
+                  e_column_id.   " 내가 클릭한 열 이름
+
+ENDCLASS.
+CLASS lcl_event_handler IMPLEMENTATION.
+  METHOD on_hotspot_click.
+    DATA ls_row LIKE gs_out_h.  "출고 header header 클릭한 행 저장하는 변수
+    DATA ls_row2 LIKE gs_invoice. "청구서 header 클릭한 행 저장하는 변수
+
+    CASE e_column_id-fieldname.
+      WHEN 'OUTNUM'.
+        "클릭한 행 가져오기
+        READ TABLE gt_out_h INTO ls_row INDEX e_row_id-index.
+
+        IF sy-subrc EQ 0.
+          gv_sel_out = ls_row-outnum. "선택한 행의 outnum
+
+          IF gv_prev_index IS NOT INITIAL.
+            READ TABLE gt_out_h INTO ls_row INDEX gv_prev_index. "이전에 선택한 행 불러오기
+
+            CLEAR ls_row-cellcolor. " 색 초기화
+
+            MODIFY gt_out_h FROM ls_row "gt_sale에 반영
+            INDEX gv_prev_index
+            TRANSPORTING cellcolor.
+
+          ENDIF.
+
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*    hotspot 클릭한 라인은 색상 처리</font>
+          ls_row-cellcolor = 'C310'. " 색상(C) 노란색(3) 진한(1) 배경(0)
+
+<font color ="#0000FF">*     ITAB 에서 클릭한 데이터의 값만 ls_row에서 값을 가져와 변경한다.</font>
+          MODIFY gt_out_h FROM ls_row
+                            INDEX e_row_id-index
+                            TRANSPORTING cellcolor .
+
+          gv_prev_index = e_row_id-index. "현재 클릭한 행 변수에 저장
+
+          "출고 ITEM SELECT
+          SELECT A~outnum, A~vposn, A~matnr, A~lgort, A~lfqty, A~meins, B~MAKTX "charg뺌
+                 FROM zca_sdt110 AS A
+            INNER JOIN ZCA_MAKT AS B
+            ON A~MATNR = B~MATNR
+                 WHERE outnum = @gv_sel_out
+                  AND B~SPRAS = '3'
+                 INTO CORRESPONDING FIELDS OF TABLE @gt_out_i.
+        ENDIF.
+        LEAVE TO SCREEN 0100.
+
+      WHEN 'INV_NO'.
+        DATA ls_inv_h   TYPE zca_sdt120. "청구서 header info
+
+        READ TABLE gt_invoice INTO ls_row2 INDEX e_row_id-index.
+
+        IF sy-subrc EQ 0.
+          gv_sel_INVNO = ls_row2-inv_no. "선택한 행의 outnum
+          "청구서 HEADER SELECT
+          SELECT SINGLE inv_no, sales_no, gjahr, budat, fkdat, zlsch,
+                cuscode, taxamount, finalamt, status3, BILAMT, WERKS, LGORT, waers
+                FROM zca_sdt120
+                WHERE inv_no = @gv_sel_invno
+                INTO CORRESPONDING FIELDS OF @ls_inv_h.
+
+           "HEAER INFO 채워주기
+            PERFORM SET_INV_HEADER USING ls_inv_h.
+
+          "청구서 ITEM SELECT
+          SELECT inv_no, item_no, matnr, deliv_qty, unit, regprice,
+                 tamount, waers
+                 FROM zca_sdt130
+                 WHERE inv_no = @gv_sel_invno
+                 INTO CORRESPONDING FIELDS OF TABLE @gt_inv_i.
+        ENDIF.
+        CALL SCREEN 0110 STARTING AT 60 5 ENDING AT 162 25 .  "스크린 110번 호출
+    ENDCASE.
+
+<font color ="#0000FF">*    LEAVE TO SCREEN 0100.</font>
+  ENDMETHOD.
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

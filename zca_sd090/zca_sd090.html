@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD090</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD090</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [SD] 계약만료 메일 생성 프로그램</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZCA_SD90</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& [SD] 만료 예정 계약 조회</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zca_sd90 MESSAGE-ID zca_msg.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 선언 관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+include <a href ="zca_sd090_top.html">zca_sd090_top</a>. " 전역 변수 선언
+include <a href ="zca_sd090_cls.html">zca_sd090_cls</a>." Class
+include <a href ="zca_sdt090_scr.html">zca_sdt090_scr</a>." Selection-screen
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 구현 관련 Include</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+include <a href ="zca_sd090_pbo.html">zca_sd090_pbo</a>.
+include <a href ="zca_sd090_pai.html">zca_sd090_pai</a>.
+include <a href ="zca_sd090_f01.html">zca_sd090_f01</a>.
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* ABAP Events</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+" 프로그램 실행 시 가장 먼저 일회성으로 실행되는 이벤트
+
+INITIALIZATION.
+
+  " 선택화면에서 입력값 점검 등에 사용됨
+
+AT SELECTION-SCREEN.
+  " 선택화면 출력 전 실행되는 이벤트로
+  " 선택화면 구성요소의 속성을 변경해서 화면을 수정하는데 주로 사용
+
+AT SELECTION-SCREEN OUTPUT.
+
+  LOOP AT SCREEN.
+    CASE screen-group1.
+      WHEN 'A1'.
+        IF pa_stat = 'X'.
+          CLEAR pa_days.
+          screen-input = 0.  " 입력 비활성화
+
+        ELSE.
+          screen-input = 1.  " 다시 활성화
+        ENDIF.
+        MODIFY SCREEN.
+    ENDCASE.
+  ENDLOOP.
+
+
+
+  " 실행 버튼을 누른 후 AT SELECTION-SCREEN에서 오류 메시지 없이 통과한 경우만 실행.
+  " 데이터 조회, 가공 후 출력할 때 주로 사용
+
+START-OF-SELECTION.
+
+  " 계약 헤더 데이터 조회
+  PERFORM select_data.
+
+  " 계약 헤더 데이터 수정
+  PERFORM modify_data.
+
+  " 조회한 데이터에 대해 조회 정보 출력하기
+  PERFORM info_data.
+
+  " 스크린 100 호출
+  PERFORM display_data.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* T0100 --&gt; [SD] 만료 예정 계약 조회</font>
+<font color ="#0000FF">* T0110 --&gt; 계약 정보</font>
+<font color ="#0000FF">* T0140 --&gt; 고객 정보</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* 001 검색 조건</font>
+<font color ="#0000FF">* F01 남은 계약 일수</font>
+<font color ="#0000FF">* F02 메일 발송 여부</font>
+<font color ="#0000FF">* F03 계약 상태</font>
+<font color ="#0000FF">* F04 메일 발송일</font>
+<font color ="#0000FF">* T01 계약 조회</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* PA_DAYS         만료 까지 남은 일수</font>
+<font color ="#0000FF">* PA_STAT         만료된 계약</font>
+<font color ="#0000FF">* PA_UNSNT         메일 미발송 계약</font>
+<font color ="#0000FF">* SO_CUSCD D       .</font>
+<font color ="#0000FF">* SO_VBELN D       .</font>
+<font color ="#0000FF">* SO_VDAT D       .</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZCA_MSG</font>
+<font color ="#0000FF">*332   선택한 데이터를 찾을 수 없습니다.</font>
+<font color ="#0000FF">*333   컨테이너 생성 중 오류가 발생했습니다.</font>
+<font color ="#0000FF">*334   ALV Object 생성 중 오류가 발생했습니다.</font>
+<font color ="#0000FF">*335   화면 호출 중 오류가 발생했습니다.</font>
+<font color ="#0000FF">*336   라인을 선택해주세요.</font>
+<font color ="#0000FF">*337   2차 메일까지 발송된 계약 건입니다.</font>
+<font color ="#0000FF">*338   이미 만료된 계약입니다.</font>
+<font color ="#0000FF">*339   메일전송 실패</font>
+<font color ="#0000FF">*340   메일전송 성공</font>
+<font color ="#0000FF">*363   ALV에 표시된 고객 코드를 누른 후 클릭해주세요.</font>
+<font color ="#0000FF">*364   메일 전송을 취소했습니다.</font>
+<font color ="#0000FF">*YPE</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

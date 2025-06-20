@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD090_CLS</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD090_CLS</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Class</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD90_CLS</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Class(Definition) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CLASS lcl_event_handler DEFINITION.
+
+  PUBLIC SECTION.
+<font color ="#0000FF">*-- Static Method</font>
+    CLASS-METHODS:
+
+      on_double_click
+        FOR EVENT double_click OF cl_gui_alv_grid
+        IMPORTING e_row " 내가 더블 클릭한 행 번호 정보
+                  e_column, " 내가 더블 클릭한 열의 정보
+
+      " HOTSPOT 이벤트를 위한 Handler Method
+      on_hotspot_click
+        FOR EVENT hotspot_click OF cl_gui_alv_grid
+        IMPORTING e_row_id " 내가 클릭한 행 번호
+                  e_column_id, " 내가 클릭한 열 이름
+
+      " ALV 툴바에 버튼을 다루는 이벤트
+      on_toolbar
+        FOR EVENT toolbar OF cl_gui_alv_grid
+        IMPORTING e_object,
+
+      " TOOLBAR 이벤트로 만든 버튼을 클릭했을 때 작동하는 이벤트
+      on_user_command
+        FOR EVENT user_command OF cl_gui_alv_grid
+        IMPORTING e_ucomm.
+
+ENDCLASS.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* Class (Implementation) LCL_EVENT_HANDLER</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+CLASS lcl_event_handler IMPLEMENTATION.
+
+  METHOD on_double_click.
+    " 더블 클릭한 행 번호 가져오기
+    READ TABLE gt_display INTO gs_display INDEX e_row-index.
+
+    IF sy-subrc EQ 0.
+
+      PERFORM select_data_0120.
+
+      PERFORM select_data_0130.
+
+      " 다이얼로그 스크린 0110 호출
+      CALL SCREEN 0110 STARTING AT 30 10.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD on_hotspot_click.
+    " 고객 코드를 입력하지 않았을 때 메시지 출력
+<font color ="#0000FF">*    IF e_row_id-rowtype IS NOT INITIAL.</font>
+<font color ="#0000FF">*      MESSAGE i331. " 고객 코드를 입력해주세요.</font>
+<font color ="#0000FF">*      RETURN.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+
+
+    READ TABLE gt_display INTO gs_display INDEX e_row_id-index.
+
+    IF sy-subrc NE 0.
+      MESSAGE i332 DISPLAY LIKE 'E'. " 선택한 데이터를 찾을 수 없습니다.
+      RETURN.
+    ENDIF.
+
+    CASE e_column_id-fieldname.
+      WHEN 'CUSCODE'.
+
+        SELECT SINGLE  credit_id
+                       cuscode
+                       cusname
+                       cre_grade
+                       credit_limit
+                       credit_bal
+                       cus_sales
+                       waers
+                       default_count
+          INTO CORRESPONDING FIELDS OF zca_sdt020
+          FROM zca_sdt020
+          WHERE cuscode EQ gs_display-cuscode.
+
+
+        LEAVE SCREEN. " 화면 새로고침
+
+
+    ENDCASE.
+
+
+  ENDMETHOD.
+
+  METHOD on_toolbar.
+
+    DATA: ls_button LIKE LINE OF e_object-&gt;mt_toolbar,
+          lv_count  TYPE i.
+
+    CLEAR ls_button.
+    ls_button-butn_type = 3.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR ls_button.
+    ls_button-function = 'FILT_ALL'.
+    lv_count = lines( gt_display ).
+    ls_button-text      = |전체 ({ lv_count })|.
+    ls_button-quickinfo = '검색 조건 초기화'.
+    ls_button-icon = icon_refresh.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR ls_button.
+    ls_button-function = 'FILT_RED'.
+    lv_count = REDUCE i( INIT x = 0 FOR  ls_conthd  IN gt_display
+                         WHERE ( alter_level = '@5C@' )
+                         NEXT x = x + 1 ).
+
+    ls_button-text      = |({  lv_count })|.
+    ls_button-quickinfo = '남은 계약 일 수  7일 미만'.
+    ls_button-icon = icon_led_red.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR ls_button.
+    ls_button-function = 'FILT_YELLOW'.
+    lv_count = REDUCE i( INIT x = 0 FOR ls_conthd IN gt_display
+                     WHERE ( alter_level = '@5D@' )
+                     NEXT x = x + 1 ).
+    ls_button-text      = |({ lv_count })|.
+    ls_button-quickinfo = '남은 계약 일 수 30일 이하'.
+    ls_button-icon = icon_led_yellow.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+    CLEAR ls_button.
+    ls_button-function = 'FILT_GREEN'.
+    lv_count = REDUCE i( INIT x = 0 FOR ls_conthd IN gt_display
+                 WHERE ( alter_level = '@5B@' )
+                 NEXT x = x + 1 ).
+    ls_button-text      = |({ lv_count })|.
+    ls_button-quickinfo = '남은 계약 일 수 30일 초과'.
+    ls_button-icon = icon_led_green.
+    APPEND ls_button TO e_object-&gt;mt_toolbar.
+
+  ENDMETHOD.
+
+  METHOD on_user_command.
+    CASE e_ucomm.
+      WHEN 'FILT_ALL'.
+        PERFORM set_alv_filter USING space.
+      WHEN 'FILT_RED'.
+        PERFORM set_alv_filter USING '@5C@'.
+      WHEN 'FILT_YELLOW'.
+        PERFORM set_alv_filter USING '@5D@'.
+      WHEN 'FILT_GREEN'.
+        PERFORM set_alv_filter USING '@5B@'.
+    ENDCASE.
+
+
+  ENDMETHOD.
+
+ENDCLASS.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD110TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD110TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include MZCA_SD020TOP</b></font>
+<hr>
+<pre width="100">
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include MZCA_SD020TOP                            - Module Pool      SAPMZCA_SD020</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+PROGRAM sapmzca_sd020 MESSAGE-ID zca_msg.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 화면 0100 을 위한 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*-- 화면과 연결하기 위한 변수</font>
+TABLES zca_sdt070.
+
+<font color ="#0000FF">*-- RANGE 변수 선언</font>
+RANGES: r_seqno FOR zca_sdt070-seqno.
+
+<font color ="#0000FF">*-- ALV Layout Variant 저장 및 관리를 위한 변수</font>
+DATA gs_variant TYPE disvariant.
+DATA gv_save TYPE c.
+
+<font color ="#0000FF">*-- 화면에 그린 필드와 연결할 변수 선언</font>
+DATA: r_seqnofr TYPE zca_sdt070-seqno,
+      r_seqnoto TYPE zca_sdt070-seqno,
+      gv_month  TYPE c LENGTH 6. " 월 검색 필드
+
+<font color ="#0000FF">*-- ALV 정렬을 하기 위한 변수</font>
+DATA : gs_sort TYPE lvc_s_sort,
+       gt_sort TYPE lvc_t_sort.
+
+<font color ="#0000FF">*-- OK_CODE 변수 선언</font>
+DATA ok_code TYPE sy-ucomm.
+
+<font color ="#0000FF">*-- ALV 객체 변수 선언</font>
+DATA: go_container_0100 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_0100  TYPE REF TO cl_gui_alv_grid.
+
+<font color ="#0000FF">*-- 필드 카탈로그를 사용하기 위한 변수</font>
+DATA: gs_fieldcat_0100 TYPE lvc_s_fcat,
+      gt_fieldcat_0100 TYPE lvc_t_fcat.
+
+
+<font color ="#0000FF">*-- ALV 레이아웃 설정을 위한 변수</font>
+DATA: gs_layout_0100 TYPE lvc_s_layo,
+      gt_layout_0100 TYPE lvc_s_layo.
+
+<font color ="#0000FF">*-- 0100번 화면에서 라디오 버튼을 쓰기 위해 변수 선언</font>
+DATA : rb_all    TYPE c VALUE 'X',
+       rb_future TYPE c,
+       rb_past   TYPE c.
+
+<font color ="#0000FF">*-- 셀 색칠을 위한 변수 선언</font>
+DATA: gt_cellcol TYPE lvc_t_scol,
+      gs_cellcol TYPE lvc_s_scol.
+
+
+<font color ="#0000FF">*-- 납품 일정 리스트를 출력하기 위한 Structure</font>
+DATA : BEGIN OF gs_display,
+         vbeln        TYPE zca_sdt070-vbeln, " 계약 번호
+         seqno        TYPE zca_sdt070-seqno, " 납품 순번
+         vposn        TYPE zca_sdt070-vposn, " 항목 번호
+         deliv_date   TYPE zca_sdt070-deliv_date, " 납품 일정
+         matnr        TYPE zca_sdt070-matnr, " 자재 코드
+         maktx        TYPE zca_makt-maktx, " 자재명
+         deliv_qty    TYPE zca_sdt070-deliv_qty, " 납품 수량
+         meins        TYPE zca_sdt070-meins, " 납품 단위
+         status       TYPE zca_sdt070-status, " 결재 상태
+         status2      TYPE zca_sdt070-status2, " 대금청구문서 생성 여부
+         status8      TYPE zca_sdt070-status8, " 판매오더생성여부
+         status4      TYPE zca_Sdt070-status4, " 출고 여부
+         celltab      TYPE lvc_t_scol,
+         light        TYPE c LENGTH 1,
+         status_icon  TYPE icon-id, " 결재 상태 아이콘
+         status8_icon TYPE icon-id, " 판매오더 생성 여부 아이콘
+         status4_icon TYPE icon-id, " 출고 여부 아이콘
+       END OF gs_display,
+
+       gt_display LIKE TABLE OF gs_display.
+
+<font color ="#0000FF">*-- INFO 를 띄우기 위한 변수 선언</font>
+DATA : BEGIN OF gs_info,
+         seqno   TYPE zca_sdt070-seqno, " 납품 순번
+         status2 TYPE zca_sdt070-status2, " 대금청구문서 생성 여부
+         status4 TYPE zca_Sdt070-status4, " 출고 여부
+       END OF gs_info,
+
+       gt_info LIKE TABLE OF gs_info.
+
+
+TYPES: BEGIN OF ty_keypair,
+         vbeln TYPE zca_sdt070-vbeln,
+         seqno TYPE zca_sdt070-seqno,
+       END OF ty_keypair.
+
+
+DATA: gt_selected_keys TYPE TABLE OF ty_keypair,
+      gs_selected_key  TYPE ty_keypair.
+
+TYPES: BEGIN OF ty_keypair_it,
+         vbeln TYPE zca_sdt070-vbeln, " 계약 문서 번호
+         seqno TYPE zca_sdt070-seqno, " 납품 순번
+         vposn TYPE zca_sdt070-vposn, " 항목 번호
+       END OF ty_keypair_it.
+
+DATA: gt_selected_keys_it TYPE TABLE OF ty_keypair_it,
+      gs_selected_key_it  TYPE ty_keypair_it.
+
+<font color ="#0000FF">*-- 납품 현황을 위한 변수 선언</font>
+DATA: max_seqno   TYPE zca_sdt070-seqno,
+      now_seqno   TYPE i,
+      now_billing TYPE i.
+
+DATA icon_st1 TYPE icons-text.
+
+
+
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0110 화면을 위한 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*-- TABSTRIP</font>
+CONTROLS my_tabstrip TYPE TABSTRIP.
+
+<font color ="#0000FF">*-- TABSTRIP의 SUBSCREEN 번호를 관리하기 위한 변수</font>
+DATA dynnr TYPE sy-dynnr.
+
+<font color ="#0000FF">*-- SAVE_OK</font>
+DATA save_ok TYPE sy-ucomm.
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0120 화면을 위한 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+TABLES zca_sdt050.
+
+
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+<font color ="#0000FF">* 0130 화면을 위한 변수 선언</font>
+<font color ="#0000FF">*--------------------------------------------------------------------*</font>
+
+<font color ="#0000FF">*-- ALV에 출력할 변수 선언</font>
+<font color ="#0000FF">*-- ALV에 출력할 변수 선언</font>
+DATA: BEGIN OF gs_con_list,
+        vposn  TYPE zca_sdt060-vposn,
+        matnr  TYPE zca_sdt060-matnr,
+        maktx  TYPE zca_makt-maktx,
+        qty    TYPE zca_sdt060-qty,
+        meins  TYPE zca_sdt060-meins,
+        netval TYPE zca_sdt060-netval,
+        waers  TYPE zca_sdt060-waers,
+      END OF gs_con_list,
+
+      gt_con_list LIKE TABLE OF gs_con_list.
+
+<font color ="#0000FF">*-- alv 변수 선언</font>
+DATA: go_container_0130 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid_0130  TYPE REF TO cl_gui_alv_grid.
+
+DATA:gs_layout_0130  TYPE lvc_s_layo,
+     gs_variant_0130 TYPE disvariant,
+     gs_sort_0130    TYPE lvc_s_sort,
+     gt_sort_0130    TYPE lvc_t_sort.
+
+<font color ="#0000FF">* ALV Field Catalog</font>
+DATA: gt_field_cat_0130 TYPE lvc_t_fcat,
+      gs_field_cat_0130 TYPE lvc_s_fcat.
+
+DATA gv_btn_status TYPE c VALUE abap_off.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

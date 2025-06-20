@@ -1,0 +1,899 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD010_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD010_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include MZCA_SD010F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD010F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0110 .
+  gs_layout_0110-sel_mode = 'B'.
+  gs_layout_0110-zebra = abap_on.
+  gs_layout_0110-cwidth_opt = 'A'. " X, A
+  gs_layout_0110-info_fname = 'CELLCOLOR'.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0110 .
+  REFRESH gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'CREDITID'.
+  gs_field_cat_0110-coltext = '고객 신용 번호'.
+  gs_field_cat_0110-key = 'X'.
+  gs_field_cat_0110-outputlen = 20.
+  gs_field_cat_0110-hotspot = 'X'.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'SALESNO'.
+  gs_field_cat_0110-coltext = '판매 오더 번호'.
+  gs_field_cat_0110-outputlen = 20.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'CUSCODE'.
+  gs_field_cat_0110-coltext = '고객 코드'.
+  gs_field_cat_0110-outputlen = 20.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'CUSNAME'.
+  gs_field_cat_0110-coltext = '고객명'.
+  gs_field_cat_0110-outputlen = 20.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'CREGRADE'.
+  gs_field_cat_0110-coltext = '신용등급'.
+  gs_field_cat_0110-outputlen = 20.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'CREDITBAL'.
+  gs_field_cat_0110-coltext = '여신 잔액'.
+  gs_field_cat_0110-outputlen = 20.
+  gs_field_cat_0110-cfieldname  = 'WAERS'.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'NETWR'.
+  gs_field_cat_0110-coltext = '총 주문 금액'.
+  gs_field_cat_0110-outputlen = 20.
+  gs_field_cat_0110-cfieldname = 'WAERS'.   " 금액 필드는 화폐 참조 필드와 연결
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'WAERS'.
+  gs_field_cat_0110-coltext = '통화코드'.
+  gs_field_cat_0110-outputlen = 10.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'VDATU'.
+  gs_field_cat_0110-coltext = '납품일'.
+  gs_field_cat_0110-outputlen = 15.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+  CLEAR gs_field_cat_0110.
+  gs_field_cat_0110-fieldname = 'BPADRR'.
+  gs_field_cat_0110-coltext = '배송지'.
+  gs_field_cat_0110-outputlen = 30.
+  APPEND gs_field_cat_0110 TO gt_field_cat_0110.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_event_0100</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_event_0110 .
+  SET HANDLER lcl_event_handler=&gt;on_hotspot_click FOR go_alv_tab1.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0110 .
+  CALL METHOD go_alv_tab1-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name = 'ZCA_SDT020'  "</font>
+<font color ="#0000FF">*     IS_VARIANT      = GS_VARIANT        " Layout</font>
+<font color ="#0000FF">*     I_SAVE          = GS_SAVE        " Save Layout</font>
+      is_layout       = gs_layout_0110        " Layout
+    CHANGING
+      it_outtab       = gt_tab1  " 출력할 데이터를 가진 ITAB     " Output Table
+      it_fieldcatalog = gt_field_cat_0110.
+  " 기존 필드의 속성을 변경하기 위해 사용
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0110</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0110 .
+  CREATE OBJECT go_container_tab1
+    EXPORTING
+      container_name = 'CCON_TAB1'.               " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_tab1
+    EXPORTING
+      i_parent = go_container_tab1.                " Parent Container
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_credit_data .
+  SELECT * FROM zca_sd_cdsv_020
+ WHERE ( creditid EQ @zca_sdt020-credit_id OR @zca_sdt020-credit_id IS INITIAL )
+    AND ( cuscode EQ @zca_sdt020-cuscode OR @zca_sdt020-cuscode   IS INITIAL )
+    AND ( cusname EQ @zca_sdt020-cusname OR @zca_sdt020-cusname   IS INITIAL )
+<font color ="#0000FF">*    AND status9 = 'B'</font>
+    AND status9 = ' '
+INTO CORRESPONDING FIELDS OF TABLE @gt_tab1.
+
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE '출고 문서 데이터 없음' TYPE 'S' DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*    MESSAGE '해당 조건의  데이터 없음' TYPE 'S'  DISPLAY LIKE 'E'.</font>
+    RETURN.
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_custom</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_info  USING    ps_row TYPE ty_cdsv_010.
+<font color ="#0000FF">*  SELECT SINGLE</font>
+<font color ="#0000FF">*      a~cuscode</font>
+<font color ="#0000FF">*      a~cusname</font>
+<font color ="#0000FF">*      b~bpcsnr</font>
+<font color ="#0000FF">*      a~cre_grade</font>
+<font color ="#0000FF">*      a~credit_limit</font>
+<font color ="#0000FF">*      a~credit_bal</font>
+<font color ="#0000FF">*      a~waers</font>
+<font color ="#0000FF">*    INTO CORRESPONDING FIELDS OF gs_credit_info</font>
+<font color ="#0000FF">*    FROM zca_SDT020 AS a</font>
+<font color ="#0000FF">*    INNER JOIN zca_kna1 AS b</font>
+<font color ="#0000FF">*    ON a~cuscode EQ b~kunnr</font>
+<font color ="#0000FF">*    WHERE a~cuscode EQ p_ls_row_cuscode.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  "고객정보</font>
+<font color ="#0000FF">*  zca_kna1-kunnr = gs_credit_info-cuscode.</font>
+<font color ="#0000FF">*  zca_kna1-name1 = gs_credit_info-cusname.</font>
+<font color ="#0000FF">*  zca_kna1-bpcsnr = gs_credit_info-bpcsnr.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  "현재 여신 정보</font>
+<font color ="#0000FF">*  zca_SDT020-cre_grade = gs_credit_info-cre_grade.</font>
+<font color ="#0000FF">*  limit = gs_credit_info-credit_limit.</font>
+<font color ="#0000FF">*  bal = gs_credit_info-credit_bal.</font>
+<font color ="#0000FF">*  waers = gs_credit_info-waers.</font>
+<font color ="#0000FF">*  waers2 = gs_credit_info-waers.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  "예상 여신 정보</font>
+<font color ="#0000FF">*  grade2 = gs_credit_info-cre_grade.</font>
+<font color ="#0000FF">*  limit2 = gs_credit_info-credit_limit.</font>
+<font color ="#0000FF">*  bal2 = gs_credit_info-credit_bal - ls_row-netwr.</font>
+<font color ="#0000FF">*  ZCA_SDT080-netwr =</font>
+<font color ="#0000FF">*  waers3 = gs_credit_info-waers.</font>
+<font color ="#0000FF">*  waers4 = gs_credit_info-waers.</font>
+<font color ="#0000FF">*  waers5 = gs_credit_info-waers.</font>
+
+  SELECT SINGLE
+        salesno,
+        creditid,
+        cuscode,
+        cusname,
+        bpcsnr,
+        cregrade,
+        creditlimit,
+        creditbal,
+        netwr,
+        waers,
+        defaultcount,
+        bpadrr,
+        zemail
+      INTO CORRESPONDING FIELDS OF @gs_credit_info
+      FROM zca_sd_cdsv_020
+     WHERE cuscode EQ @ps_row-cuscode
+    AND salesno EQ @ps_row-salesno.
+  "판매오더 번호
+  zca_sdt080-sales_no = gs_credit_info-salesno.
+  "고객정보
+  zca_kna1-kunnr = gs_credit_info-cuscode.
+  zca_kna1-name1 = gs_credit_info-cusname.
+  zca_kna1-bpcsnr = gs_credit_info-bpcsnr.
+  zca_kna1-bpadrr = gs_credit_info-bpadrr.
+  zca_kna1-zemail = gs_credit_info-zemail.
+  zca_sdt020-default_count = gs_credit_info-defaultcount.
+
+  "현재 여신 정보
+  zca_sdt020-cre_grade = gs_credit_info-cregrade.
+  limit = gs_credit_info-creditlimit.
+  bal = gs_credit_info-creditbal.
+  waers = gs_credit_info-waers.
+  waers2 = gs_credit_info-waers.
+
+  "예상 여신 정보
+  grade2 = gs_credit_info-cregrade.
+  limit2 = gs_credit_info-creditlimit.
+  bal_b = gs_credit_info-creditbal.
+  bal_a = gs_credit_info-creditbal - gs_row-netwr.
+  netwr2 = gs_credit_info-netwr.
+  waers3 = gs_credit_info-waers.
+  waers4 = gs_credit_info-waers.
+  waers5 = gs_credit_info-waers.
+  waers6 = gs_credit_info-waers.
+
+  "0140 정보
+  credit_id = gs_credit_info-creditid.
+  cuscode = gs_credit_info-cuscode.
+  cusname = gs_credit_info-cusname.
+<font color ="#0000FF">*  zca_SDT020-credit_limit = gs_credit_info-creditlimit.</font>
+<font color ="#0000FF">*  zca_SDT020-credit_bal = gs_credit_info-creditbal.</font>
+  zca_sdt020-default_count = gs_credit_info-defaultcount.
+
+
+  credit_limit = gs_credit_info-creditlimit.
+  credit_bal = gs_credit_info-creditbal.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0140 .
+  CREATE OBJECT go_container_modal
+    EXPORTING
+      container_name = 'CCON_MODAL'.               " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_modal
+    EXPORTING
+      i_parent = go_container_modal.                " Parent Container
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0140 .
+  gs_variant-report = sy-repid.
+  CALL METHOD go_alv_modal-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name = 'ZCA_SDT090'  "</font>
+      is_variant      = gs_variant        " Layout
+      i_save          = 'A'        " Save Layout
+      is_layout       = gs_layout_0140        " Layout
+    CHANGING
+      it_outtab       = gt_modal  " 출력할 데이터를 가진 ITAB     " Output Table
+      it_fieldcatalog = gt_field_cat_0140.
+  " 기존 필드의 속성을 변경하기 위해 사용
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0120 .
+  CREATE OBJECT go_container_tab2
+    EXPORTING
+      container_name = 'CCON_TAB2'.               " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_tab2
+    EXPORTING
+      i_parent = go_container_tab2.                " Parent Container
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0120 .
+  CALL METHOD go_alv_tab2-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name = 'ZCA_SDT020'  "</font>
+<font color ="#0000FF">*     IS_VARIANT      = GS_VARIANT        " Layout</font>
+<font color ="#0000FF">*     I_SAVE          = GS_SAVE        " Save Layout</font>
+      is_layout       = gs_layout_0120        " Layout
+    CHANGING
+      it_outtab       = gt_tab2  " 출력할 데이터를 가진 ITAB     " Output Table
+      it_fieldcatalog = gt_field_cat_0120.
+  " 기존 필드의 속성을 변경하기 위해 사용
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_approve_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_approve_data .
+  SELECT *
+    FROM zca_sd_cdsv_020
+    WHERE ( creditid EQ @zca_sdt020-credit_id OR @zca_sdt020-credit_id IS INITIAL )
+    AND ( cuscode EQ @zca_sdt020-cuscode OR @zca_sdt020-cuscode IS INITIAL )
+    AND ( cusname EQ @zca_sdt020-cusname OR @zca_sdt020-cusname IS INITIAL )
+    AND status9 = 'A'
+  INTO CORRESPONDING FIELDS OF TABLE @gt_tab2.
+
+  IF sy-subrc &lt;&gt; 0.
+<font color ="#0000FF">*    MESSAGE '해당 조건의  데이터 없음' TYPE 'S' DISPLAY LIKE 'E'.</font>
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_reject_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_reject_data .
+  SELECT *
+  FROM zca_sd_cdsv_020
+    WHERE ( creditid EQ @zca_sdt020-credit_id OR @zca_sdt020-credit_id IS INITIAL )
+    AND ( cuscode EQ @zca_sdt020-cuscode OR @zca_sdt020-cuscode IS INITIAL )
+    AND ( cusname EQ @zca_sdt020-cusname OR @zca_sdt020-cusname IS INITIAL )
+    AND status9 = 'R'
+  INTO CORRESPONDING FIELDS OF TABLE @gt_tab3.
+
+  IF gt_tab3 IS INITIAL.
+<font color ="#0000FF">*    MESSAGE '해당 조건의  데이터 없음' TYPE 'S' DISPLAY LIKE 'E'.</font>
+  ENDIF.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_alv_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_alv_0130 .
+  CALL METHOD go_alv_tab3-&gt;set_table_for_first_display
+    EXPORTING
+<font color ="#0000FF">*     i_structure_name = 'ZCA_SDT020'  "</font>
+<font color ="#0000FF">*     IS_VARIANT      = GS_VARIANT        " Layout</font>
+<font color ="#0000FF">*     I_SAVE          = GS_SAVE        " Save Layout</font>
+      is_layout       = gs_layout_0130        " Layout
+    CHANGING
+      it_outtab       = gt_tab3   " 출력할 데이터를 가진 ITAB     " Output Table
+      it_fieldcatalog = gt_field_cat_0130.
+  " 기존 필드의 속성을 변경하기 위해 사용
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form create_object_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM create_object_0130 .
+  CREATE OBJECT go_container_tab3
+    EXPORTING
+      container_name = 'CCON_TAB3'.               " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT go_alv_tab3
+    EXPORTING
+      i_parent = go_container_tab3.                " Parent Container
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form approve_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM approve_data .
+  DATA gv_newbal TYPE zca_sdt080-netwr.
+<font color ="#0000FF">*  gv_newbal = gs_tab1-creditbal - gs_tab1-netwr.</font>
+  gv_newbal = gs_row-creditbal - gs_row-netwr.
+<font color ="#0000FF">*  ls_row-creditbal - ls_row-netwr.</font>
+
+  IF gv_newbal &gt;= 0.
+    "여신관리 플래그 '승인'으로 변경
+    UPDATE zca_sdt080
+      SET status9 = 'A',
+          aenam = @sy-uname,
+          aedat = @sy-datum,
+          aezet = @sy-uzeit
+      WHERE sales_no = @gs_row-salesno.
+    "ZCA_SDT070 테이블 여신관리 플래그 '승인'으로 변경
+    UPDATE zca_sdt070
+      SET status_credit = 'X',
+          aenam = @sy-uname,
+          aedat = @sy-datum,
+          aezet = @sy-uzeit
+      WHERE vbeln = @gs_row-vbeln "계약번호
+      AND seqno = @gs_row-seqno. "납품 순번
+    "여신 잔액 변경
+    UPDATE zca_sdt020
+       SET credit_bal = @gv_newbal,
+          aenam = @sy-uname,
+          aedat = @sy-datum,
+          aezet = @sy-uzeit
+       WHERE cuscode = @gs_row-cuscode.
+    "메시지 출력
+    DATA(lv_msg) = |판매오더 번호 { gs_row-salesno }가 승인되었습니다.|.
+    MESSAGE lv_msg TYPE 'I'.
+  ELSE.
+    PERFORM reject_data.
+    MESSAGE '여신 잔액이 부족하여 요청이 반려되었습니다.' TYPE 'I'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form select_sale_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM select_sale_item_data .
+  DATA: lt_outnum_row TYPE lvc_t_row,
+        ls_outnum_row TYPE lvc_s_row.
+
+<font color ="#0000FF">** 선택한 줄 가져오기</font>
+<font color ="#0000FF">*  CALL METHOD go_alv_tab1-&gt;get_selected_rows</font>
+<font color ="#0000FF">*    IMPORTING</font>
+<font color ="#0000FF">*      et_index_rows = lt_outnum_row.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*  IF lt_outnum_row IS INITIAL AND gv_sel_salesno_cl IS NOT INITIAL .</font>
+<font color ="#0000FF">*    MESSAGE s322 DISPLAY LIKE 'E'. "핫스팟 클릭한 행과 같은 행을 클릭 후 여신점검 해주세요.</font>
+<font color ="#0000FF">*    RETURN.</font>
+<font color ="#0000FF">*  ELSEIF lt_outnum_row IS INITIAL.  "선택한 줄이 없으면 메시지</font>
+<font color ="#0000FF">*    MESSAGE s305 DISPLAY LIKE 'E'. "선택한 행이 없습니다.</font>
+<font color ="#0000FF">*    RETURN.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*** 선택한 줄이 없으면 메시지</font>
+<font color ="#0000FF">**  IF lt_outnum_row IS INITIAL.</font>
+<font color ="#0000FF">**    MESSAGE s305 DISPLAY LIKE 'E'. "선택한 행이 없습니다.</font>
+<font color ="#0000FF">**    RETURN.</font>
+<font color ="#0000FF">**  ENDIF.</font>
+
+
+
+<font color ="#0000FF">*  READ TABLE lt_outnum_row INTO ls_outnum_row INDEX 1.</font>
+<font color ="#0000FF">*  IF sy-subrc = 0.</font>
+<font color ="#0000FF">*    READ TABLE gt_tab1 INTO gs_tab1 INDEX ls_outnum_row-index.</font>
+<font color ="#0000FF">*    IF sy-subrc = 0.</font>
+<font color ="#0000FF">*      gv_sel_salesno = gs_tab1-salesno. " 선택한 판매오더 번호 가져오기</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      MESSAGE s315 WITH gv_sel_salesno. "판매오더 & 여신을 점검합니다.</font>
+<font color ="#0000FF">*    ENDIF.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+
+  "핫스팟 클릭한 행이 없다면
+  IF gv_sel_salesno_cl IS INITIAL.
+    MESSAGE s320 DISPLAY LIKE 'E'. "'먼저 고객 신용 번호를 클릭해주세요'
+    RETURN.
+  ELSE.
+<font color ="#0000FF">*    IF gv_sel_salesno &lt;&gt; gv_sel_salesno_cl.</font>
+<font color ="#0000FF">*      MESSAGE s321 DISPLAY LIKE 'E'. "먼저 여신 점검을 하고 싶은 행의 고객 신용 번호를 클릭하세요'</font>
+<font color ="#0000FF">*      RETURN.</font>
+<font color ="#0000FF">*    ELSE.</font>
+    SELECT * FROM zca_sdt090 AS a
+   INNER JOIN zca_makt AS b
+   ON a~matnr EQ b~matnr
+<font color ="#0000FF">*        WHERE a~sales_no = @ls_row-salesno</font>
+<font color ="#0000FF">*     WHERE a~sales_no = @gv_sel_SALESNO</font>
+   WHERE a~sales_no = @gv_sel_salesno_cl
+   AND b~spras = '3'
+   INTO CORRESPONDING FIELDS OF TABLE @gt_modal.
+
+    CALL SCREEN 0140 STARTING AT 10 1 ENDING AT 125 25.
+
+  ENDIF.
+<font color ="#0000FF">*  ENDIF.</font>
+
+<font color ="#0000FF">*  IF gv_sel_salesno IS INITIAL.</font>
+<font color ="#0000FF">*    MESSAGE s305 DISPLAY LIKE 'E'. "선택한 행이 없습니다.</font>
+<font color ="#0000FF">*    RETURN.</font>
+<font color ="#0000FF">*  ELSE.</font>
+<font color ="#0000FF">*    SELECT * FROM zca_sdt090 AS a</font>
+<font color ="#0000FF">*      INNER JOIN zca_makt AS b</font>
+<font color ="#0000FF">*      ON a~matnr EQ b~matnr</font>
+<font color ="#0000FF">**        WHERE a~sales_no = @ls_row-salesno</font>
+<font color ="#0000FF">*      WHERE a~sales_no = @gv_sel_SALESNO</font>
+<font color ="#0000FF">*      AND b~spras = @sy-langu</font>
+<font color ="#0000FF">*      INTO CORRESPONDING FIELDS OF TABLE @gt_modal.</font>
+<font color ="#0000FF">*  ENDIF.</font>
+<font color ="#0000FF">*  CALL SCREEN 0140 STARTING AT 10 1 ENDING AT 125 25.</font>
+
+  PERFORM refresh.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0120 .
+  gs_layout_0120-sel_mode = 'B'.
+  gs_layout_0120-zebra = abap_on.
+  gs_layout_0120-cwidth_opt = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0120</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0120 .
+  REFRESH gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'CREDITID'.
+  gs_field_cat_0120-coltext = '고객 신용 번호'.
+  gs_field_cat_0120-key = 'X'.
+  gs_field_cat_0120-outputlen = 20.
+<font color ="#0000FF">*  gs_field_cat_0120-hotspot = 'X'.</font>
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'SALESNO'.
+  gs_field_cat_0120-coltext = '판매 오더 번호'.
+  gs_field_cat_0120-outputlen = 20.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'CUSCODE'.
+  gs_field_cat_0120-coltext = '고객 코드'.
+  gs_field_cat_0120-outputlen = 20.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'CUSNAME'.
+  gs_field_cat_0120-coltext = '고객명'.
+  gs_field_cat_0120-outputlen = 20.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'CREGRADE'.
+  gs_field_cat_0120-coltext = '신용등급'.
+  gs_field_cat_0120-outputlen = 20.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'CREDITBAL'.
+  gs_field_cat_0120-coltext = '여신 잔액'.
+  gs_field_cat_0120-outputlen = 20.
+  gs_field_cat_0120-ref_field = 'WAERS'.
+  gs_field_cat_0120-cfieldname = 'WAERS'.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'NETWR'.
+  gs_field_cat_0120-coltext = '총 주문 금액'.
+  gs_field_cat_0120-outputlen = 20.
+  gs_field_cat_0120-ref_field = 'WAERS'.
+  gs_field_cat_0120-cfieldname = 'WAERS'.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'WAERS'.
+  gs_field_cat_0120-coltext = '통화코드'.
+  gs_field_cat_0120-outputlen = 10.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'VDATU'.
+  gs_field_cat_0120-coltext = '납품일'.
+  gs_field_cat_0120-outputlen = 15.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+  CLEAR gs_field_cat_0120.
+  gs_field_cat_0120-fieldname = 'BPADRR'.
+  gs_field_cat_0120-coltext = '배송지'.
+  gs_field_cat_0120-outputlen = 120.
+  APPEND gs_field_cat_0120 TO gt_field_cat_0120.
+
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0130 .
+  gs_layout_0130-sel_mode = 'B'.
+  gs_layout_0130-zebra = abap_on.
+  gs_layout_0130-cwidth_opt = 'A'.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0130</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0130 .
+  REFRESH gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'CREDITID'.
+  gs_field_cat_0130-coltext = '고객 신용 번호'.
+  gs_field_cat_0130-key = 'X'.
+  gs_field_cat_0130-outputlen = 20.
+  gs_field_cat_0130-hotspot = 'X'.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'SALESNO'.
+  gs_field_cat_0130-coltext = '판매 오더 번호'.
+  gs_field_cat_0130-outputlen = 20.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'CUSCODE'.
+  gs_field_cat_0130-coltext = '고객 코드'.
+  gs_field_cat_0130-outputlen = 20.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'CUSNAME'.
+  gs_field_cat_0130-coltext = '고객명'.
+  gs_field_cat_0130-outputlen = 20.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'CREGRADE'.
+  gs_field_cat_0130-coltext = '신용등급'.
+  gs_field_cat_0130-outputlen = 20.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'CREDITBAL'.
+  gs_field_cat_0130-coltext = '여신 잔액'.
+  gs_field_cat_0130-outputlen = 20.
+  gs_field_cat_0130-ref_field = 'WAERS'.
+  gs_field_cat_0130-cfieldname = 'WAERS'.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'NETWR'.
+  gs_field_cat_0130-coltext = '총 주문 금액'.
+  gs_field_cat_0130-outputlen = 20.
+  gs_field_cat_0130-ref_field = 'WAERS'.
+  gs_field_cat_0130-cfieldname = 'WAERS'.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'WAERS'.
+  gs_field_cat_0130-coltext = '통화코드'.
+  gs_field_cat_0130-outputlen = 10.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'VDATU'.
+  gs_field_cat_0130-coltext = '납품일'.
+  gs_field_cat_0130-outputlen = 15.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+  CLEAR gs_field_cat_0130.
+  gs_field_cat_0130-fieldname = 'BPADRR'.
+  gs_field_cat_0130-coltext = '배송지'.
+  gs_field_cat_0130-outputlen = 130.
+  APPEND gs_field_cat_0130 TO gt_field_cat_0130.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form reject_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM reject_data .
+  UPDATE zca_sdt080
+ SET status9 = 'R',
+          aenam = @sy-uname,
+          aedat = @sy-datum,
+          aezet = @sy-uzeit
+ WHERE sales_no = @gs_row-salesno.
+
+  UPDATE zca_sdt050
+  SET status7 = 'X'
+  ,
+          aenam = @sy-uname,
+          aedat = @sy-datum,
+          aezet = @sy-uzeit
+  WHERE vbeln = @gs_row-vbeln.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_layout_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_layout_0140 .
+  gs_layout_0140-sel_mode = 'B'.
+  gs_layout_0140-zebra = abap_on.
+  gs_layout_0140-cwidth_opt = abap_on.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_alv_fieldcat_0140</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_alv_fieldcat_0140 .
+  REFRESH gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'SALES_NO'.
+  gs_field_cat_0140-coltext   = '판매 오더 번호'.
+  gs_field_cat_0140-key = 'X'.
+  gs_field_cat_0140-outputlen = 20.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'VPOSN'.
+  gs_field_cat_0140-coltext   = '항목번호'.
+  gs_field_cat_0140-outputlen = 10.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'MATNR'.
+  gs_field_cat_0140-coltext   = '자재코드'.
+  gs_field_cat_0140-outputlen = 15.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'MAKTX'.
+  gs_field_cat_0140-coltext   = '자재명'.
+  gs_field_cat_0140-outputlen = 15.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'DELIV_QTY'.
+  gs_field_cat_0140-coltext   = '납품 수량'.
+  gs_field_cat_0140-qfieldname = 'MEINS'.
+  gs_field_cat_0140-outputlen = 13.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'NETWR'.
+  gs_field_cat_0140-coltext   = '할인 적용 후 총 주문 금액'.
+  gs_field_cat_0140-cfieldname = 'WAERS'.
+  gs_field_cat_0140-outputlen = 23.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'WAERS'.
+  gs_field_cat_0140-coltext   = '통화코드'.
+  gs_field_cat_0140-outputlen = 5.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'MEINS'.
+  gs_field_cat_0140-coltext   = '단위'.
+  gs_field_cat_0140-outputlen = 5.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+  CLEAR gs_field_cat_0140.
+  gs_field_cat_0140-fieldname = 'DELIV_DATE'.
+  gs_field_cat_0140-coltext   = '납품일'.
+  gs_field_cat_0140-outputlen = 10.
+  APPEND gs_field_cat_0140 TO gt_field_cat_0140.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form clear_info</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM clear_info .
+  CLEAR : grade2,
+      limit,
+      limit2, "0.00
+      bal    , "0.00 현재 잔액
+      bal_b , "0.00 현재 잔액
+      bal_a    , "0.00 예상 잔액
+      waers     ,
+      waers2  ,
+      waers3  ,
+      waers4 ,
+      waers5   ,
+      waers6    ,
+      credit_id ,
+      cuscode  ,
+      cusname  ,
+      netwr2.
+  CLEAR: zca_kna1,
+  zca_sdt080.
+
+ENDFORM.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form PRE</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM pre   USING pv_sel_salesno .
+  SELECT * FROM zca_sdt090 AS a
+       INNER JOIN zca_makt AS b
+       ON a~matnr EQ b~matnr
+<font color ="#0000FF">*        WHERE a~sales_no = @ls_row-salesno</font>
+       WHERE a~sales_no = @pv_sel_salesno
+       AND b~spras = '3'
+       INTO CORRESPONDING FIELDS OF TABLE @gt_modal.
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+FORM refresh .
+
+  CLEAR zca_sdt020.
+  CLEAR zca_kna1.
+  CLEAR limit.
+  CLEAR limit2.
+  CLEAR zca_sdt080.
+  CLEAR netwr2.
+  CLEAR waers.
+  CLEAR waers2.
+  CLEAR waers3.
+  CLEAR waers4.
+  CLEAR waers5.
+  CLEAR waers6.
+  CLEAR bal_b.
+  CLEAR bal_a.
+  CLEAR grade2.
+  CLEAR bal.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form REFRESH_SEARCH</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_search .
+  CLEAR zca_kna1.
+  CLEAR limit.
+  CLEAR limit2.
+  CLEAR zca_sdt080.
+  CLEAR netwr2.
+  CLEAR waers.
+  CLEAR waers2.
+  CLEAR waers3.
+  CLEAR waers4.
+  CLEAR waers5.
+  CLEAR waers6.
+  CLEAR bal_b.
+  CLEAR bal_a.
+  CLEAR grade2.
+  CLEAR bal.
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

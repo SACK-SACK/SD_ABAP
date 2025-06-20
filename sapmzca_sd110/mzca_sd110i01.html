@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>MZCA_SD110I01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: MZCA_SD110I01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          MZCA_SD020I01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SEARCH'.
+
+      IF zca_sdt070-vbeln IS INITIAL.
+        MESSAGE s301 DISPLAY LIKE 'W'. " 계약문서번호를 입력해주세요.
+        REFRESH gt_display.
+      ENDIF.
+
+      IF zca_sdt070-vbeln IS NOT INITIAL.
+
+        PERFORM search_data_alv_0100.
+
+        PERFORM info_deliv.
+        IF go_alv_grid_0100 is BOUND.
+           CALL METHOD go_alv_grid_0100-&gt;set_filter_criteria
+              EXPORTING
+                it_filter = VALUE lvc_t_filt( ).
+        ENDIF.
+
+      ENDIF.
+
+    WHEN 'CREATE'.
+
+<font color ="#0000FF">*-- 내가 선택한 행을 읽어오기위한 변수 선언</font>
+      DATA: gt_rows TYPE lvc_t_row,
+            gs_row  TYPE lvc_s_row,
+
+            BEGIN OF ls_matched,
+              vbeln TYPE zca_sdt070-vbeln,
+              seqno TYPE zca_sdt070-seqno,
+            END OF ls_matched.
+
+      CLEAR:  gs_row, gt_rows.
+
+
+      REFRESH gt_selected_keys.
+      " 실제 선택한 행들의 (계약문서번호, 납품순번) 조합을 수집
+      CALL METHOD go_alv_grid_0100-&gt;get_selected_rows
+        IMPORTING
+          et_index_rows = gt_rows.
+
+      DESCRIBE TABLE gt_rows.
+
+<font color ="#0000FF">*      확인된 라인 수에 따라 로직 구현</font>
+      CASE sy-tfill.
+        WHEN 0. " 선택된 라인이 없음
+          MESSAGE s346 DISPLAY LIKE 'E'. " 선택된 라인이 없습니다.
+
+
+        WHEN OTHERS.
+
+          LOOP AT gt_rows INTO gs_row.
+            READ TABLE gt_display INDEX gs_row-index INTO gs_display.
+            IF sy-subrc = 0.
+              CLEAR gs_selected_key.
+              gs_selected_key-vbeln = gs_display-vbeln.
+              gs_selected_key-seqno = gs_display-seqno.
+
+
+              "GT_SELECTED_KEYS에 사용자가 선택한 인덱스 --&gt; GT_DISPLAY에서 찾아서 넣음
+              APPEND gs_selected_key TO gt_selected_keys.
+            ENDIF.
+          ENDLOOP.
+
+          "GT_SELECTED_KEYS의 중복 제거 (vbeln seqno 키값으로)
+          SORT gt_selected_keys BY vbeln seqno.
+          DELETE ADJACENT DUPLICATES FROM gt_selected_keys COMPARING vbeln seqno.
+
+
+          LOOP AT gt_selected_keys INTO gs_selected_key.
+
+            " 판매오더 생성 여부 확인
+            DATA(lv_status8) = ''.
+            SELECT SINGLE status8 INTO lv_status8
+              FROM zca_sdt070
+              WHERE vbeln = gs_selected_key-vbeln
+                AND seqno = gs_selected_key-seqno.
+
+          ENDLOOP.
+
+          DATA lv_answer TYPE c LENGTH 1.
+
+          " 결재할 때 재확인 메시지 출력
+          CALL FUNCTION 'POPUP_TO_CONFIRM'
+            EXPORTING
+              titlebar              = '판매오더문서 생성'
+              text_question         = '정말 판매오더 문서를 생성하시겠습니까?'
+              text_button_1         = '예'
+              text_button_2         = '아니오'
+              default_button        = '1'
+              display_cancel_button = abap_false
+            IMPORTING
+              answer                = lv_answer.
+
+          IF lv_answer = '1'.
+            PERFORM create_so_header.
+
+          ELSE.
+            MESSAGE i330. " 판매 오더 문서 생성을 취소하셨습니다.
+          ENDIF.
+      ENDCASE.
+
+    WHEN 'CALL_PRG'.
+
+      PERFORM call_prg.
+
+    WHEN 'CREDIT'.
+      PERFORM call_credit.
+
+    WHEN 'PICK'.
+      PERFORM call_dialog_vbeln.
+
+
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+  CASE ok_code.
+
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0110  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0110 INPUT.
+
+  save_ok = ok_code.
+
+  CLEAR ok_code.
+
+  CASE save_ok.
+    WHEN 'CONT'.
+      LEAVE TO SCREEN 0. " CONT 버튼을 누르면 이전 화면으로 돌아간다.
+    WHEN 'TAB1' OR 'TAB2'.
+      my_tabstrip-activetab = save_ok.
+  ENDCASE.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  VALIDATION_VBELN  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE validation_vbeln INPUT.
+
+<font color ="#0000FF">* 값이 입력이 될 떄마다 실행하는 유효성 검사</font>
+  DATA lv_vbeln TYPE zca_sdt070-vbeln.
+
+  SELECT SINGLE vbeln
+    FROM zca_sdt070 INTO lv_vbeln
+    WHERE vbeln EQ zca_sdt070-vbeln.
+
+  IF sy-subrc NE 0.
+    MESSAGE s300 DISPLAY LIKE 'E'. " 존재하지 않는 계약문서번호입니다. 다시 입력해주세요.
+    RETURN.
+  ENDIF.
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

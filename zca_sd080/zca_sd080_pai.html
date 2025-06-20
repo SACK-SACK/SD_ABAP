@@ -1,0 +1,273 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD080_PAI</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD080_PAI</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZCA_SD080_PAI</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD080_PAI</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0100  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'SEARCH'.
+      gv_view_mode = 'A'. "트리가 아니라는 의미(트리는 D)
+      CASE my_tabstrip-activetab.
+
+        WHEN 'TAB1'.
+          PERFORM select_sale_data.
+          CLEAR zca_sds020.
+
+        WHEN 'TAB2'.
+          PERFORM select_outbound_data. "출고 데이터
+
+          "출고 문서 item 초기화
+          CLEAR: gt_out_i[].
+          CLEAR zca_sds020.
+      ENDCASE.
+
+    WHEN 'REQ'.          "재고이전요청
+      PERFORM req_move_mat.
+    WHEN 'OUTBOUND'.     "출하 프로세스
+      PERFORM process_out.
+    WHEN 'REFRESH'.      "초기화
+      PERFORM refersh_all.
+    WHEN 'TAB1' OR 'TAB2'.
+      my_tabstrip-activetab = ok_code.
+
+  ENDCASE.
+ENDMODULE.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  EXIT  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      CLEAR cargo2.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      CLEAR cargo2.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  SELECT_SALE_DATA  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE select_sale_data INPUT.
+  SELECT * FROM zca_sdt100
+    INTO CORRESPONDING FIELDS OF TABLE @gt_sale.
+ENDMODULE.
+
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0140  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0140 INPUT.
+  CASE ok_code.
+    WHEN 'CON'. "확인
+      IF pv_agree EQ abap_false.
+<font color ="#0000FF">*        CALL FUNCTION 'POPUP_TO_INFORM'</font>
+<font color ="#0000FF">*          EXPORTING</font>
+<font color ="#0000FF">*            titel = '알림'                 " Title line of dialog box</font>
+<font color ="#0000FF">*            txt1  = '체크박스를 선택해주세요.'</font>
+<font color ="#0000FF">*            txt2  = ' '.</font>
+        CALL FUNCTION 'POPUP_TO_DISPLAY_TEXT'
+          EXPORTING
+            titel     = '알림'
+            textline1 = '출하 정보 확인 후, 체크박스를 선택해주세요.'.
+        EXIT.
+      ENDIF.
+<font color ="#0000FF">*      IF gs_sale-icon EQ '@5B@'. " ICON이 초록색</font>
+<font color ="#0000FF">*        " 최적이 아닌 물류센터 선택시 팝업 띄우고 업데이트</font>
+<font color ="#0000FF">**        PERFORM change_wh.</font>
+<font color ="#0000FF">*        PERFORM move_mat USING gv_sel_salesno. "배치별 재고 감소, 자산 감소</font>
+<font color ="#0000FF">*        PERFORM create_outdoc.   " 출고문서생성</font>
+<font color ="#0000FF">**        PERFORM create_fi_docu.  "출고 문서에 따른 FI 회계 전표 생성</font>
+<font color ="#0000FF">*        CALL FUNCTION 'ZCA_FI_DELIVERY_POST'</font>
+<font color ="#0000FF">*          EXPORTING</font>
+<font color ="#0000FF">*            iv_outnum = gv_outnum                " 출고문서번호</font>
+<font color ="#0000FF">**          IMPORTING</font>
+<font color ="#0000FF">**           ev_belnr  =               " 전표번호</font>
+<font color ="#0000FF">*          .</font>
+<font color ="#0000FF">*        PERFORM select_outbound_data. "출고 데이터 REFRESH</font>
+<font color ="#0000FF">*        LEAVE TO SCREEN 0. "이전 화면으로 돌아가며, 그 화면의 PBO를 다시 실행</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ELSE.                       "ICON이 빨간색</font>
+<font color ="#0000FF">*        MESSAGE '출고할 재고가 충분하지 않습니다.' TYPE 'S' DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+
+      "출고 문서 번호 생성
+      SELECT SINGLE ship_req_no
+        FROM zca_sdt180
+        INTO @DATA(lv_req)
+        WHERE sales_no = @gv_sel_salesno.
+      gv_outnum = lv_req(10). "재고이동 요청 번호에서 앞자리 10개만
+
+      " 출고문서생성
+      PERFORM create_outdoc.
+
+      "출고 문서 생성 FORM에서 에러 발생시 현재 FORM에서도 다음 프로세스 중단
+      IF gv_stop_flag = 'STOP'.
+        LEAVE TO SCREEN 0.
+        RETURN.
+      ENDIF.
+
+      "fi 전표
+      call function <a href ="zca_fi_delivery_post/zca_fi_delivery_post.html">'ZCA_FI_DELIVERY_POST'</a>
+        EXPORTING
+          iv_outnum = gv_outnum                " 출고문서번호
+<font color ="#0000FF">*          IMPORTING</font>
+<font color ="#0000FF">*         ev_belnr  =               " 전표번호</font>
+        .
+
+      "배치별 재고 감소, 자산 감소
+      PERFORM move_mat USING gv_sel_salesno.
+
+      "refresh
+      PERFORM select_sale_data.
+      PERFORM select_outbound_data. "출고 데이터 REFRESH
+      PERFORM refresh_tree. "트리 노드 refresh
+      LEAVE TO SCREEN 0. "이전 화면으로 돌아가며, 그 화면의 PBO를 다시 실행
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      Module  USER_COMMAND_0150  INPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*       text</font>
+<font color ="#0000FF">*----------------------------------------------------------------------*</font>
+MODULE user_command_0150 INPUT.
+  CASE ok_code.
+    WHEN 'SAVE'.
+      IF cargo2 &lt;&gt; gv_pname.
+        CALL FUNCTION 'POPUP_TO_CONFIRM'
+          EXPORTING
+            titlebar              = '물류센터 변경 확인'
+            text_question         = |현재 선택한 '{ cargo2 }'는 거리 기반 최적 물류센터가 아닙니다. 변경하시겠습니까?|
+            text_button_1         = '예'
+            text_button_2         = '아니오'
+            default_button        = '1' "예
+            display_cancel_button = ''
+          IMPORTING
+            answer                = lv_answer.
+
+        IF lv_answer = '2'. " 추천 물류센터로 복구하고 종료
+          cargo2 = gv_pname.
+
+          CALL FUNCTION 'VRM_SET_VALUES'
+            EXPORTING
+              id     = 'CARGO2'
+              values = lt_box.
+          RETURN. " 더 이상 진행하지 않음(case문을 넘어감)
+        ENDIF.
+      ENDIF.
+
+
+
+    WHEN 'CON'.
+<font color ="#0000FF">*      SELECT SINGLE sales_no, status10 FROM zca_sdt080</font>
+<font color ="#0000FF">*         INTO @DATA(ls_status10)</font>
+<font color ="#0000FF">*         WHERE sales_no EQ @gv_sel_salesno.</font>
+<font color ="#0000FF">*      IF lS_status10 &lt;&gt; 'X'.</font>
+<font color ="#0000FF">*        MESSAGE s311 DISPLAY LIKE 'E'. "이미 재고 이동 요청되었습니다.</font>
+<font color ="#0000FF">*        RETURN.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+<font color ="#0000FF">*      IF gs_sale-icon EQ '@5B@'. " ICON이 초록색</font>
+
+
+
+<font color ="#0000FF">*      IF GV_FLAG EQ 'X'. " 생산 완료 플래그</font>
+
+
+
+
+
+<font color ="#0000FF">*        " 최적 물류센터 이외 선택시 업데이트</font>
+<font color ="#0000FF">*        PERFORM change_wh USING lv_answer.</font>
+<font color ="#0000FF">*        " 출하지시번호 생성 및 테이블 업데이트</font>
+<font color ="#0000FF">*        PERFORM con_ship_req USING gv_sel_salesno.</font>
+<font color ="#0000FF">*        "판매오더 리프레시</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*        LEAVE TO SCREEN 0. "이전 화면으로 돌아가며, 그 화면의 PBO를 다시 실행</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*      ELSE.                       "ICON이 빨간색</font>
+<font color ="#0000FF">**        MESSAGE '출하할 재고가 충분하지 않습니다.' TYPE 'S' DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*        MESSAGE s307 DISPLAY LIKE 'E'.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+      " 1차 팝업: 추천 물류센터와 다를 경우 확인
+
+<font color ="#0000FF">*        IF cargo2 NE gv_pname.</font>
+<font color ="#0000FF">*          CALL FUNCTION 'POPUP_TO_CONFIRM'</font>
+<font color ="#0000FF">*            EXPORTING</font>
+<font color ="#0000FF">*              titlebar       = '물류센터 변경 확인'</font>
+<font color ="#0000FF">*              text_question  = |현재 선택한 '{ cargo2 }'는 거리 기반 최적 물류센터가 아닙니다. 변경하시겠습니까?|</font>
+<font color ="#0000FF">*              text_button_1  = '예'</font>
+<font color ="#0000FF">*              text_button_2  = '아니오'</font>
+<font color ="#0000FF">*              default_button = '1' "예</font>
+<font color ="#0000FF">*            IMPORTING</font>
+<font color ="#0000FF">*              answer         = lv_answer.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*          IF lv_answer = '2'. " 추천 물류센터로 복구하고 종료</font>
+<font color ="#0000FF">*            cargo2 = gv_pname.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*            CALL FUNCTION 'VRM_SET_VALUES'</font>
+<font color ="#0000FF">*              EXPORTING</font>
+<font color ="#0000FF">*                id     = 'CARGO2'</font>
+<font color ="#0000FF">*                values = lt_box.</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">*            RETURN. " 더 이상 진행하지 않음(case문을 넘어감)</font>
+<font color ="#0000FF">*          ENDIF.</font>
+<font color ="#0000FF">*        ENDIF.</font>
+
+      " 2차 팝업: 재고 이전 요청 확인
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = '재고 이전 요청 확인'
+          text_question         = '재고 이전을 요청하시겠습니까?'
+          text_button_1         = '예'
+          text_button_2         = '아니오'
+          default_button        = '1'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = lv_answer.
+
+      IF lv_answer = '1'.
+        " 재고 이전 번호 생성 및 ZCA_SDT180 테이블 업데이트
+        PERFORM update_t180 USING gv_sel_salesno.
+        IF gv_view_mode = 'D'. " 트리에서 들어온 경우
+          PERFORM handle_node_click USING gv_selected_node.
+<font color ="#0000FF">*            PERFORM handle_node_click USING .</font>
+          LEAVE TO SCREEN 0.
+        ELSE. " 조회 버튼 눌러서 전체조회
+          LEAVE TO SCREEN 0.
+        ENDIF.
+        LEAVE TO SCREEN 0. " 이전 화면으로 복귀
+      ENDIF.
+
+<font color ="#0000FF">*      ELSE. "아이콘이 빨간색일때</font>
+<font color ="#0000FF">*        MESSAGE s307 DISPLAY LIKE 'E'. "아직 생산이 되지 않았습니다.</font>
+<font color ="#0000FF">*        RETURN.</font>
+<font color ="#0000FF">*      ENDIF.</font>
+  ENDCASE.
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

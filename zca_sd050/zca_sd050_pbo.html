@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZCA_SD050_PBO</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZCA_SD050_PBO</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  PBO</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZCA_SD050_PBO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module CLEAR_OK_CODE OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0100 OUTPUT.
+
+  IF go_container IS INITIAL.
+    " Container와 ALV 생성
+    PERFORM create_object_0100.
+
+    " ALV Layout 설정
+    PERFORM set_alv_layout_0100.
+
+    " ALV Field Catalog 설정
+    PERFORM set_alv_fieldcat_0100.
+
+    " ALV Event Handler Method 등록
+    PERFORM set_alv_event_0100.
+
+    " 값 설정
+    PERFORM set_alv_table_for_display_0100.
+
+  ELSE.
+    " ALV 새로고침
+    go_alv_grid-&gt;refresh_table_display( ).
+
+  ENDIF.
+
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0110 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0110 OUTPUT.
+  SET PF-STATUS 'S0110'.
+  SET TITLEBAR 'T0110'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module REFRSH_ALV OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE refrsh_alv OUTPUT.
+  go_alv_grid-&gt;refresh_table_display( ).
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_INPUT_FIELD_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE set_input_field_0100 OUTPUT.
+  LOOP AT SCREEN.
+    IF screen-name EQ 'ZCA_SDT070-VBELN'.
+      screen-required = '2'.
+      MODIFY SCREEN.
+    ENDIF.
+  ENDLOOP.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module STATUS_0120 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE status_0120 OUTPUT.
+  SET PF-STATUS 'S0120'.
+  SET TITLEBAR 'T0120'.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_DYNNR_0100 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_dynnr_0120 OUTPUT.
+  CASE my_tabstrip-activetab.
+    WHEN 'TAB1'.
+      dynnr = '0130'.
+
+    WHEN 'TAB2'.
+      dynnr = '0140'.
+
+    WHEN OTHERS.
+      my_tabstrip-activetab = 'TAB1'.
+      dynnr = '0130'.
+
+  ENDCASE.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module INIT_ALV_0140 OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE init_alv_0140 OUTPUT.
+  IF go_container_0140 IS INITIAL.
+
+    " Container와 ALV 객체 생성
+    PERFORM create_object_0140.
+
+    " 레이아웃 설정
+    PERFORM set_alv_layout_0140.
+
+    " 필드 카탈로그 설정
+    PERFORM set_alv_fieldcat_0140.
+
+    " ALV 화면 출력을 위해 데이터 전달
+    PERFORM display_alv_0140.
+
+  ELSE.
+    CALL METHOD go_alv_grid_0140-&gt;refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module SET_LIGHT_ALV_0100 OUTPUT</font>
+MODULE set_light_alv_0100 OUTPUT.
+
+  LOOP AT gt_display INTO gs_display.
+
+    IF gs_display-status = 'X'.
+<font color ="#0000FF">*      gs_display-light = icon_led_green.</font>
+      gs_display-light = '3'.
+
+    ELSEIF gs_display-status IS INITIAL.
+<font color ="#0000FF">*      gs_display-light = icon_led_yellow.</font>
+      gs_display-light = '2'.
+
+    ENDIF.
+
+    MODIFY gt_display FROM gs_display.
+
+  ENDLOOP.
+
+ENDMODULE.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Module FILL_MONTH_DROPDOWN OUTPUT</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+MODULE fill_month_dropdown OUTPUT.
+
+  DATA: lt_vrm   TYPE vrm_values,
+        ls_vrm   TYPE vrm_value,
+        lv_month TYPE c LENGTH 2.
+
+  CLEAR lt_vrm.
+
+  DO 12 TIMES.
+    lv_month = sy-index.
+    IF strlen( lv_month ) = 1.
+      lv_month = '0' && lv_month.
+    ENDIF.
+
+    ls_vrm-key = lv_month .
+    ls_vrm-text = '월'.
+    APPEND ls_vrm TO lt_vrm.
+  ENDDO.
+
+  CALL FUNCTION 'VRM_SET_VALUES'
+    EXPORTING
+      id     = 'GV_MONTH'                " Name of Value Set
+      values = lt_vrm.               " Value table for ID
+
+ENDMODULE.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>
